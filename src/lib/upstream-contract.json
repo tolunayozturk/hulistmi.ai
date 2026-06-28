@@ -1,0 +1,57 @@
+{
+  "allowedHosts": ["svc-drcn.developer.huawei.com"],
+  "allowedPaths": [
+    "/community/servlet/consumer/cn/documentPortal/getCatalogTree",
+    "/community/servlet/consumer/cn/documentPortal/getNavigationAddress",
+    "/community/servlet/consumer/cn/documentPortal/checkCenterGrayUser",
+    "/community/servlet/consumer/cn/documentPortal/getCenterRootNodeTree",
+    "/community/servlet/consumer/cn/documentPortal/getCenterDocument",
+    "/community/servlet/consumer/partnerCommunityService/developer/search"
+  ],
+  "catalogs": {
+    "harmonyos-guides": {
+      "request": {
+        "url": "https://svc-drcn.developer.huawei.com/community/servlet/consumer/cn/documentPortal/getCatalogTree",
+        "headers": {},
+        "body": {
+          "language": "en",
+          "catalogName": "harmonyos-guides",
+          "showHide": "1"
+        }
+      },
+      "responseHeaders": { "content-type": "application/json" }
+    },
+    "harmonyos-references": {
+      "request": {
+        "url": "https://svc-drcn.developer.huawei.com/community/servlet/consumer/cn/documentPortal/getCatalogTree",
+        "headers": {},
+        "body": {
+          "language": "en",
+          "catalogName": "harmonyos-references",
+          "showHide": "1"
+        }
+      },
+      "responseHeaders": { "content-type": "application/json" }
+    }
+  },
+  "documents": {},
+  "search": {
+    "url": "https://svc-drcn.developer.huawei.com/community/servlet/consumer/partnerCommunityService/developer/search",
+    "headers": {},
+    "responseHeaders": { "content-type": "application/json" },
+    "bodyForUIAbility": {
+      "deviceId": "ESN",
+      "deviceType": "1",
+      "language": "en",
+      "country": "CN",
+      "requestOrgin": 5,
+      "whetherToCorrect": 1,
+      "keyWord": "UIAbility",
+      "cutPage": { "offset": 0, "length": 20 },
+      "developerVertical": { "categoryList": [1], "language": "en" }
+    },
+    "maxQueryLength": 120,
+    "defaultLength": 20,
+    "maxLength": 20
+  }
+}
