@@ -31,7 +31,11 @@ export const TOOL_DEFINITIONS = {
     description: "Fetch a HarmonyOS documentation catalog.",
     http: {
       path: "/catalog",
-      query: { catalogName: "catalogName", language: "language", depth: "depth" },
+      query: {
+        catalogName: "catalogName",
+        language: "language",
+        depth: "depth",
+      },
     },
   },
 } as const;

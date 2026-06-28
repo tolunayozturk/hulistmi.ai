@@ -16,9 +16,7 @@ describe("CLI endpoint mapping", () => {
       "/consumer/en/doc/harmonyos-guides/start-overview",
     );
     expect(
-      resolveFetchEndpoint(
-        "/consumer/en/doc/harmonyos-guides/start-overview",
-      ),
+      resolveFetchEndpoint("/consumer/en/doc/harmonyos-guides/start-overview"),
     ).toBe("/consumer/en/doc/harmonyos-guides/start-overview");
     expect(resolveSearchEndpoint("UIAbility")).toBe("/search?q=UIAbility");
   });

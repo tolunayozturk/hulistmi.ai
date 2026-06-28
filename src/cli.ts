@@ -1,12 +1,10 @@
 import { spawn } from "node:child_process";
-import {
-  parseCliArgs,
-  resolveFetchEndpoint,
-  resolveSearchEndpoint,
-} from "./lib/cli-endpoints";
-import { fetchHarmonyOSCatalog, renderCatalogMarkdown } from "./lib/catalog";
+import { parseCliArgs, resolveFetchEndpoint } from "./lib/cli-endpoints";
 import { fetchGuidePageData, renderGuideMarkdown } from "./lib/guides";
-import { fetchReferencePageData, renderReferenceMarkdown } from "./lib/reference";
+import {
+  fetchReferencePageData,
+  renderReferenceMarkdown,
+} from "./lib/reference";
 import { renderSearchMarkdown, searchHarmonyOSDocs } from "./lib/search";
 import { splitDocsPath } from "./lib/url";
 
