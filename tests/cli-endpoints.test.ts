@@ -11,10 +11,15 @@ describe("CLI endpoint mapping", () => {
       resolveFetchEndpoint(
         "https://developer.huawei.com/consumer/en/doc/harmonyos-guides/start-overview",
       ),
-    ).toBe("/harmonyos-guides/start-overview");
+    ).toBe("/consumer/en/doc/harmonyos-guides/start-overview");
     expect(resolveFetchEndpoint("harmonyos-guides/start-overview")).toBe(
-      "/harmonyos-guides/start-overview",
+      "/consumer/en/doc/harmonyos-guides/start-overview",
     );
+    expect(
+      resolveFetchEndpoint(
+        "/consumer/en/doc/harmonyos-guides/start-overview",
+      ),
+    ).toBe("/consumer/en/doc/harmonyos-guides/start-overview");
     expect(resolveSearchEndpoint("UIAbility")).toBe("/search?q=UIAbility");
   });
 

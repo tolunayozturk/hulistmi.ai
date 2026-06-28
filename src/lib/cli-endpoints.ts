@@ -5,11 +5,29 @@ export type CliCommand =
   | { command: "search"; query: string; json: boolean }
   | { command: "serve"; port?: number };
 
+const CLI_DOC_PREFIX = "consumer/en/doc/";
+
 export function resolveFetchEndpoint(input: string): string {
   const trimmed = input.trim();
   if (!trimmed) throw new Error("Fetch input cannot be empty");
-  if (/^https?:\/\//i.test(trimmed)) return `/${huaweiUrlToPath(trimmed)}`;
-  return `/${normalizeDocsPath(trimmed)}`;
+  let path: string;
+  if (/^https?:\/\//i.test(trimmed)) {
+    path = huaweiUrlToPath(trimmed);
+  } else {
+    path = normalizeDocsPath(trimmed);
+  }
+  // Strip the full prefix if already present
+  if (path.startsWith(CLI_DOC_PREFIX)) {
+    path = path.slice(CLI_DOC_PREFIX.length);
+  }
+  // Only add prefix for known HarmonyOS doc paths
+  if (
+    path.startsWith("harmonyos-guides/") ||
+    path.startsWith("harmonyos-references/")
+  ) {
+    return `/${CLI_DOC_PREFIX}${path}`;
+  }
+  return `/${path}`;
 }
 
 export function resolveSearchEndpoint(query: string): string {
