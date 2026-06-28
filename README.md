@@ -4,9 +4,9 @@ Making HarmonyOS docs AI-readable.
 
 > The `hulistmi.ai` domain is aspirational.
 > The service is currently available at
-> [`https://hulistmi-ai.workers.dev`](https://hulistmi-ai.workers.dev).
+> [`https://hulistmi-ai.y6vd2dkjgb.workers.dev`](https://hulistmi-ai.y6vd2dkjgb.workers.dev).
 
-[hulistmi-ai.workers.dev](https://hulistmi-ai.workers.dev)
+[hulistmi-ai.y6vd2dkjgb.workers.dev](https://hulistmi-ai.y6vd2dkjgb.workers.dev)
 provides HarmonyOS developer documentation in an AI-readable format
 by converting web-rendered pages into Markdown.
 
@@ -14,7 +14,7 @@ by converting web-rendered pages into Markdown.
 
 ### HTTP API
 
-Replace `developer.huawei.com/consumer/en/doc/` with `hulistmi-ai.workers.dev/`
+Replace `developer.huawei.com/consumer/en/doc/` with `hulistmi-ai.y6vd2dkjgb.workers.dev/`
 in any HarmonyOS documentation URL:
 
 **Original:**
@@ -26,7 +26,7 @@ https://developer.huawei.com/consumer/en/doc/harmonyos-guides/start-overview
 **AI-readable:**
 
 ```
-https://hulistmi-ai.workers.dev/consumer/en/doc/harmonyos-guides/start-overview
+https://hulistmi-ai.y6vd2dkjgb.workers.dev/consumer/en/doc/harmonyos-guides/start-overview
 ```
 
 This works for all HarmonyOS guides and API reference documentation.
@@ -34,13 +34,13 @@ This works for all HarmonyOS guides and API reference documentation.
 Search is also supported:
 
 ```
-https://hulistmi-ai.workers.dev/search?q=UIAbility
+https://hulistmi-ai.y6vd2dkjgb.workers.dev/search?q=UIAbility
 ```
 
 And you can browse the full documentation catalog:
 
 ```
-https://hulistmi-ai.workers.dev/catalog?catalogName=harmonyos-guides&language=en
+https://hulistmi-ai.y6vd2dkjgb.workers.dev/catalog?catalogName=harmonyos-guides&language=en
 ```
 
 > Only English (`en`) documentation is currently supported.
@@ -48,7 +48,7 @@ https://hulistmi-ai.workers.dev/catalog?catalogName=harmonyos-guides&language=en
 ### MCP Integration
 
 Hulistmi's MCP server supports Streamable HTTP transport.
-Configure your MCP client to connect to `https://hulistmi-ai.workers.dev/mcp`.
+Configure your MCP client to connect to `https://hulistmi-ai.y6vd2dkjgb.workers.dev/mcp`.
 
 If your client requires stdio transport,
 you can proxy over stdio using `mcp-remote`:
@@ -58,7 +58,7 @@ you can proxy over stdio using `mcp-remote`:
   "mcpServers": {
     "hulistmi": {
       "command": "npx",
-      "args": ["-y", "mcp-remote", "https://hulistmi-ai.workers.dev/mcp"]
+      "args": ["-y", "mcp-remote", "https://hulistmi-ai.y6vd2dkjgb.workers.dev/mcp"]
     }
   }
 }
@@ -84,7 +84,7 @@ Hulistmi also supports the WebMCP protocol.
 The manifest is available at:
 
 ```
-https://hulistmi-ai.workers.dev/webmcp/manifest.json
+https://hulistmi-ai.y6vd2dkjgb.workers.dev/webmcp/manifest.json
 ```
 
 ### CLI
@@ -139,12 +139,12 @@ hulistmi search UIAbility --json
 
 Want your AI coding assistant to use Hulistmi consistently?
 Use the hosted skill file:
-[`https://hulistmi-ai.workers.dev/SKILL.md`](https://hulistmi-ai.workers.dev/SKILL.md)
+[`https://hulistmi-ai.y6vd2dkjgb.workers.dev/SKILL.md`](https://hulistmi-ai.y6vd2dkjgb.workers.dev/SKILL.md)
 
 Spec-compliant clients can also install it with:
 
 ```bash
-npx skills add https://hulistmi-ai.workers.dev
+npx skills add https://hulistmi-ai.y6vd2dkjgb.workers.dev
 ```
 
 ## Self-Hosting
