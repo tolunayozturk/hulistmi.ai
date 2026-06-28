@@ -4,13 +4,48 @@ import {
   resolveFetchEndpoint,
   resolveSearchEndpoint,
 } from "./lib/cli-endpoints";
+import { fetchHarmonyOSCatalog, renderCatalogMarkdown } from "./lib/catalog";
+import { fetchGuidePageData, renderGuideMarkdown } from "./lib/guides";
+import { fetchReferencePageData, renderReferenceMarkdown } from "./lib/reference";
+import { renderSearchMarkdown, searchHarmonyOSDocs } from "./lib/search";
+import { splitDocsPath } from "./lib/url";
 
 export async function main(argv = process.argv.slice(2)): Promise<void> {
   const args = parseCliArgs(argv);
-  if (args.command === "search")
-    return printWorkerResponse(resolveSearchEndpoint(args.query), args.json);
-  if (args.command === "fetch")
-    return printWorkerResponse(resolveFetchEndpoint(args.input), args.json);
+  if (args.command === "search") {
+    const result = await searchHarmonyOSDocs(args.query);
+    const output = args.json
+      ? JSON.stringify(result, null, 2)
+      : renderSearchMarkdown(result);
+    process.stdout.write(`${output}\n`);
+    return;
+  }
+  if (args.command === "fetch") {
+    const endpoint = resolveFetchEndpoint(args.input);
+    const DOC_PREFIX = "/consumer/en/doc/";
+    if (!endpoint.startsWith(DOC_PREFIX))
+      throw new Error(`Unsupported fetch endpoint: ${endpoint}`);
+    const { catalogName, pagePath } = splitDocsPath(
+      endpoint.slice(DOC_PREFIX.length),
+    );
+    const sourceUrl = `https://developer.huawei.com/consumer/en/doc/${catalogName}/${pagePath}`;
+    if (catalogName === "harmonyos-guides") {
+      const data = await fetchGuidePageData(pagePath);
+      const content = renderGuideMarkdown(data, pagePath);
+      const output = args.json
+        ? JSON.stringify({ url: sourceUrl, content }, null, 2)
+        : content;
+      process.stdout.write(`${output}\n`);
+    } else {
+      const data = await fetchReferencePageData(pagePath);
+      const content = renderReferenceMarkdown(data, pagePath);
+      const output = args.json
+        ? JSON.stringify({ url: sourceUrl, content }, null, 2)
+        : content;
+      process.stdout.write(`${output}\n`);
+    }
+    return;
+  }
   if (args.command === "serve") {
     const child = spawn(
       "npm",
@@ -20,19 +55,6 @@ export async function main(argv = process.argv.slice(2)): Promise<void> {
     child.on("exit", (code) => process.exit(code ?? 0));
     return;
   }
-}
-
-async function printWorkerResponse(
-  endpoint: string,
-  json: boolean,
-): Promise<void> {
-  const { default: app } = await import("./index");
-  const response = await app.request(endpoint, {
-    headers: { Accept: json ? "application/json" : "text/markdown" },
-  });
-  const text = await response.text();
-  if (!response.ok) throw new Error(text);
-  process.stdout.write(`${text}\n`);
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
