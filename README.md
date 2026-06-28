@@ -259,6 +259,10 @@ Publishing is handled by `.github/workflows/release.yml`.
 
 hulistmi.ai is based on [sosumi.ai](https://sosumi.ai) by [NSHipster](https://nshipster.com) ([MIT](https://github.com/NSHipster/sosumi.ai/blob/main/LICENSE.md)).
 
+## AI Disclaimer
+
+This project was built entirely by LLM coding agents.
+
 ## License
 
 This project is available under the MIT license.
