@@ -46,4 +46,83 @@ describe("HarmonyOS document fetch", () => {
       language: "en",
     });
   });
+
+  it("builds verified requests for valid guide slugs that are not prelisted", async () => {
+    mockedFetchHuaweiJson
+      .mockResolvedValueOnce({
+        code: 0,
+        message: "success",
+        value: { isGrayUser: 0 },
+      })
+      .mockResolvedValueOnce({
+        code: 0,
+        message: "success",
+        value: {
+          status: "4",
+          title: "Window Rotation",
+          content: { content: "<p>Rotate the window.</p>" },
+        },
+      });
+
+    const page = await fetchGuidePageData("window-rotation");
+
+    expect(page.title).toBe("Window Rotation");
+    expect(mockedFetchHuaweiJson).toHaveBeenCalledTimes(2);
+    expect(mockedFetchHuaweiJson.mock.calls[0][0].body).toMatchObject({
+      catalogName: "harmonyos-guides",
+      fileName: "window-rotation",
+      language: "en",
+    });
+    expect(mockedFetchHuaweiJson.mock.calls[1][0].body).toMatchObject({
+      objectId: "window-rotation",
+      catalogName: "harmonyos-guides",
+      language: "en",
+    });
+  });
+
+  it("uses center document requests when the gray check returns center metadata", async () => {
+    mockedFetchHuaweiJson
+      .mockResolvedValueOnce({
+        code: 0,
+        message: "success",
+        value: {
+          isGrayUser: 1,
+          centerPrefix: "hmos",
+          level2NodeAlias: "hmos-ui",
+          isApi: 0,
+          filename: "window-rotation",
+        },
+      })
+      .mockResolvedValueOnce({
+        code: 0,
+        message: "success",
+        value: { catalogTreeList: [] },
+      })
+      .mockResolvedValueOnce({
+        code: 0,
+        message: "success",
+        value: {
+          status: "4",
+          title: "Window Rotation",
+          content: { content: "<p>Rotate the window.</p>" },
+        },
+      });
+
+    const page = await fetchGuidePageData("window-rotation");
+
+    expect(page.title).toBe("Window Rotation");
+    expect(mockedFetchHuaweiJson).toHaveBeenCalledTimes(3);
+    expect(mockedFetchHuaweiJson.mock.calls[1][0].body).toMatchObject({
+      centerPrefix: "hmos",
+      level2NodeAlias: "hmos-ui",
+      isApi: 0,
+      fileName: "window-rotation",
+    });
+    expect(mockedFetchHuaweiJson.mock.calls[2][0].body).toMatchObject({
+      centerPrefix: "hmos",
+      level2NodeAlias: "hmos-ui",
+      isApi: 0,
+      fileName: "window-rotation",
+    });
+  });
 });
