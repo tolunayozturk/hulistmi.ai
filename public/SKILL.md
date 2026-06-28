@@ -9,8 +9,8 @@ Use hulistmi.ai to fetch and search HarmonyOS developer documentation in AI-read
 
 ## HTTP API
 
-- `GET /harmonyos-guides/<path>`
-- `GET /harmonyos-references/<path>`
+- `GET /consumer/en/doc/harmonyos-guides/<path>`
+- `GET /consumer/en/doc/harmonyos-references/<path>`
 - `GET /search?q=<query>`
 - `GET /catalog?catalogName=harmonyos-guides&language=en`
 
@@ -23,4 +23,4 @@ Use hulistmi.ai to fetch and search HarmonyOS developer documentation in AI-read
 ## CLI
 
 - `hulistmi search UIAbility --json`
-- `hulistmi fetch /harmonyos-guides/start-overview`
+- `hulistmi fetch /consumer/en/doc/harmonyos-guides/start-overview`

@@ -2,8 +2,8 @@
 
 ## HTTP API
 
-- Fetch guide Markdown: `GET https://hulistmi.ai/harmonyos-guides/<path>`
-- Fetch reference Markdown: `GET https://hulistmi.ai/harmonyos-references/<path>`
+- Fetch guide Markdown: `GET https://hulistmi.ai/consumer/en/doc/harmonyos-guides/<path>`
+- Fetch reference Markdown: `GET https://hulistmi.ai/consumer/en/doc/harmonyos-references/<path>`
 - Search: `GET https://hulistmi.ai/search?q=<query>`
 - Catalog: `GET https://hulistmi.ai/catalog?catalogName=harmonyos-guides&language=en`
 
