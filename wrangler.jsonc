@@ -1,12 +1,6 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "hulistmi-ai",
-  "routes": [
-    {
-      "pattern": "hulistmi.ai",
-      "custom_domain": true
-    }
-  ],
   "main": "src/index.ts",
   "compatibility_date": "2026-03-10",
   "compatibility_flags": ["nodejs_compat"],
@@ -20,18 +14,5 @@
   },
   "vars": {
     "NODE_ENV": "production"
-  },
-  "unsafe": {
-    "bindings": [
-      {
-        "name": "RATE_LIMITER",
-        "type": "ratelimit",
-        "namespace_id": "1001",
-        "simple": {
-          "limit": 60,
-          "period": 60
-        }
-      }
-    ]
   }
 }
