@@ -5,7 +5,7 @@ description: Use when fetching or searching HarmonyOS developer documentation in
 
 # hulistmi
 
-Use hulistmi.ai to fetch and search HarmonyOS developer documentation in AI-readable Markdown.
+Use hulistmi-ai.workers.dev to fetch and search HarmonyOS developer documentation in AI-readable Markdown.
 
 ## HTTP API
 

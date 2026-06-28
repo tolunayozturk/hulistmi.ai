@@ -134,7 +134,7 @@ app.get("/", async (c) =>
 
 app.get("/bot", (c) =>
   c.text(
-    "hulistmi.ai uses transparent, on-demand requests for HarmonyOS documentation and identifies itself with hulistmi-ai/1.0 (+https://hulistmi.ai/#bot).",
+    "hulistmi-ai.workers.dev uses transparent, on-demand requests for HarmonyOS documentation and identifies itself with hulistmi-ai/1.0 (+https://hulistmi-ai.workers.dev/#bot).",
     200,
     {
       "Content-Type": "text/plain; charset=utf-8",

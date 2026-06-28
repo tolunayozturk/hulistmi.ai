@@ -49,6 +49,6 @@ describe("HarmonyOS Markdown rendering", () => {
     expect(markdown).toContain(
       "source: https://developer.huawei.com/consumer/en/doc/harmonyos-guides/start-overview",
     );
-    expect(markdown).toContain("Extracted by [hulistmi.ai]");
+    expect(markdown).toContain("Extracted by [hulistmi-ai.workers.dev]");
   });
 });

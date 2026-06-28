@@ -1,4 +1,4 @@
-# hulistmi.ai
+# hulistmi-ai.workers.dev
 
 ## HTTP API
 
@@ -9,8 +9,8 @@
 
 ## MCP Integration
 
-- Endpoint: `https://hulistmi.ai/mcp`
-- WebMCP manifest: `https://hulistmi.ai/webmcp/manifest.json`
+- Endpoint: `https://hulistmi-ai.workers.dev/mcp`
+- WebMCP manifest: `https://hulistmi-ai.workers.dev/webmcp/manifest.json`
 - Tools: `searchHarmonyOSDocumentation`, `fetchHarmonyOSDocumentation`, `fetchHarmonyOSCatalog`
 
 ## CLI
@@ -20,9 +20,9 @@
 
 ## AI Agent Skill
 
-- Skill: `https://hulistmi.ai/SKILL.md`
-- Well-known skill: `https://hulistmi.ai/.well-known/agent-skills/hulistmi/SKILL.md`
+- Skill: `https://hulistmi-ai.workers.dev/SKILL.md`
+- Well-known skill: `https://hulistmi-ai.workers.dev/.well-known/agent-skills/hulistmi/SKILL.md`
 
 ## Notice
 
-hulistmi.ai is unofficial, on-demand, transient, not an archive, not a bulk mirror, not a redistribution channel, and not a bypass mechanism for Huawei access controls.
+hulistmi-ai.workers.dev is unofficial, on-demand, transient, not an archive, not a bulk mirror, not a redistribution channel, and not a bypass mechanism for Huawei access controls.
