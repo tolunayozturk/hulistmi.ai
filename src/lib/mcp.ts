@@ -8,7 +8,7 @@ import { renderSearchMarkdown, searchHarmonyOSDocs } from "./search";
 
 export const MCP_SERVER_INFO = {
   name: "hulistmi.ai",
-  version: "1.0.0",
+  version: "1.0.2",
 } as const;
 
 const readOnlyAnnotations = {
