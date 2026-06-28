@@ -7,8 +7,36 @@ describe("HarmonyOS Markdown rendering", () => {
       '<h2>Title</h2><p>Hello <a href="/doc">doc</a></p><script>alert(1)</script>',
     );
     expect(markdown).toContain("## Title");
-    expect(markdown).toContain("Hello doc");
+    expect(markdown).toContain("Hello [doc](/doc)");
     expect(markdown).not.toContain("alert");
+  });
+
+  it("renders section headings and tables without duplicating child text", () => {
+    const markdown = htmlToMarkdown(`
+      <h2>Available APIs</h2>
+      <p>Common ArkTS APIs are listed below.</p>
+      <table>
+        <tr><th>API</th><th>Description</th></tr>
+        <tr>
+          <td><code>startPiP(): Promise&lt;void&gt;</code></td>
+          <td>Starts a PiP window.</td>
+        </tr>
+        <tr>
+          <td><code>stopPiP(): Promise&lt;void&gt;</code></td>
+          <td>Stops a PiP window.</td>
+        </tr>
+      </table>
+      <ul>
+        <li>Video playback</li>
+      </ul>
+    `);
+
+    expect(markdown).toContain("## Available APIs");
+    expect(markdown).toContain("| API | Description |");
+    expect(markdown).toContain(
+      "| `startPiP(): Promise<void>` | Starts a PiP window. |",
+    );
+    expect(markdown.match(/Video playback/g)).toHaveLength(1);
   });
 
   it("adds source metadata and footer", () => {

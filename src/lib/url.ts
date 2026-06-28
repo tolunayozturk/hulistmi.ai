@@ -24,7 +24,7 @@ export function isValidHuaweiDocUrl(input: string): boolean {
 
 export function huaweiUrlToPath(input: string): string {
   const url = new URL(input);
-  if (!isValidHuaweiDocUrl(url.toString()))
+  if (!url.pathname.startsWith(DOC_PREFIX))
     throw new Error(`Unsupported Huawei documentation URL: ${input}`);
   return normalizeDocsPath(url.pathname.slice(DOC_PREFIX.length));
 }

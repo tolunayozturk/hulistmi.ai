@@ -125,6 +125,8 @@ async function publicLimit(c: Context, next: () => Promise<void>) {
 app.use("/search", publicLimit);
 app.use("/catalog", publicLimit);
 app.use("/mcp", publicLimit);
+app.use("/consumer/en/doc/harmonyos-guides/*", publicLimit);
+app.use("/consumer/en/doc/harmonyos-references/*", publicLimit);
 
 app.get("/", async (c) =>
   c.env.ASSETS.fetch(new Request(new URL("/index.html", c.req.url))),
@@ -139,6 +141,13 @@ app.get("/bot", (c) =>
       "Cache-Control": SHORT_CACHE,
     },
   ),
+);
+
+app.get("/consumer/en/doc/harmonyos-guides/:path{.+}", async (c) =>
+  renderDocument(c, "harmonyos-guides", c.req.param("path")),
+);
+app.get("/consumer/en/doc/harmonyos-references/:path{.+}", async (c) =>
+  renderDocument(c, "harmonyos-references", c.req.param("path")),
 );
 
 app.get("/catalog", async (c) => {

@@ -29,4 +29,12 @@ describe("HarmonyOS URL utilities", () => {
       source,
     );
   });
+
+  it("maps local Huawei-style docs paths to service paths", () => {
+    expect(
+      huaweiUrlToPath(
+        "http://localhost:8787/consumer/en/doc/harmonyos-guides/pipwindow-overview",
+      ),
+    ).toBe("harmonyos-guides/pipwindow-overview");
+  });
 });
