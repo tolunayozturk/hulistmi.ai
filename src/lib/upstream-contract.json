@@ -2,6 +2,7 @@
   "allowedHosts": ["svc-drcn.developer.huawei.com"],
   "allowedPaths": [
     "/community/servlet/consumer/cn/documentPortal/getCatalogTree",
+    "/community/servlet/consumer/cn/documentPortal/getDocumentById",
     "/community/servlet/consumer/cn/documentPortal/getNavigationAddress",
     "/community/servlet/consumer/cn/documentPortal/checkCenterGrayUser",
     "/community/servlet/consumer/cn/documentPortal/getCenterRootNodeTree",
@@ -34,7 +35,52 @@
       "responseHeaders": { "content-type": "application/json" }
     }
   },
-  "documents": {},
+  "documents": {
+    "harmonyos-guides/start-overview": {
+      "checkCenterGrayUser": {
+        "url": "https://svc-drcn.developer.huawei.com/community/servlet/consumer/cn/documentPortal/checkCenterGrayUser",
+        "headers": {},
+        "body": {
+          "catalogName": "harmonyos-guides",
+          "language": "en",
+          "fileName": "start-overview",
+          "grayId": "11111111111111111111111111111111"
+        }
+      },
+      "getDocumentById": {
+        "url": "https://svc-drcn.developer.huawei.com/community/servlet/consumer/cn/documentPortal/getDocumentById",
+        "headers": {},
+        "body": {
+          "objectId": "start-overview",
+          "nodeAlias": null,
+          "catalogName": "harmonyos-guides",
+          "language": "en"
+        }
+      }
+    },
+    "harmonyos-references/js-apis-app-ability-uiability": {
+      "checkCenterGrayUser": {
+        "url": "https://svc-drcn.developer.huawei.com/community/servlet/consumer/cn/documentPortal/checkCenterGrayUser",
+        "headers": {},
+        "body": {
+          "catalogName": "harmonyos-references",
+          "language": "en",
+          "fileName": "js-apis-app-ability-uiability",
+          "grayId": "11111111111111111111111111111111"
+        }
+      },
+      "getDocumentById": {
+        "url": "https://svc-drcn.developer.huawei.com/community/servlet/consumer/cn/documentPortal/getDocumentById",
+        "headers": {},
+        "body": {
+          "objectId": "js-apis-app-ability-uiability",
+          "nodeAlias": null,
+          "catalogName": "harmonyos-references",
+          "language": "en"
+        }
+      }
+    }
+  },
   "search": {
     "url": "https://svc-drcn.developer.huawei.com/community/servlet/consumer/partnerCommunityService/developer/search",
     "headers": {},

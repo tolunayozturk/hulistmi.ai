@@ -33,11 +33,14 @@ function assertAllowedHuaweiUrl(input: string): URL {
 function collectVerifiedRequests(): VerifiedHuaweiRequest[] {
   return [
     ...Object.values(UPSTREAM_CONTRACT.catalogs).map((entry) => entry.request),
-    ...Object.values(UPSTREAM_CONTRACT.documents).flatMap((doc) => [
-      doc.checkCenterGrayUser,
-      doc.getCenterRootNodeTree,
-      doc.getCenterDocument,
-    ]),
+    ...Object.values(UPSTREAM_CONTRACT.documents).flatMap((doc) =>
+      [
+        doc.checkCenterGrayUser,
+        doc.getDocumentById,
+        "getCenterRootNodeTree" in doc ? doc.getCenterRootNodeTree : undefined,
+        "getCenterDocument" in doc ? doc.getCenterDocument : undefined,
+      ].filter((request): request is VerifiedHuaweiRequest => Boolean(request)),
+    ),
     {
       url: UPSTREAM_CONTRACT.search.url,
       headers: UPSTREAM_CONTRACT.search.headers,

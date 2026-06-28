@@ -44,15 +44,35 @@ export async function fetchHarmonyOSCatalog(
 }
 
 function normalizeCatalogItems(value: unknown): HarmonyCatalogItem[] {
-  if (!Array.isArray(value)) return [];
-  return value.map((item) => {
+  const source = Array.isArray(value)
+    ? value
+    : isRecord(value) && Array.isArray(value.catalogTreeList)
+      ? value.catalogTreeList
+      : [];
+  if (!Array.isArray(source)) return [];
+  return source.map((item) => {
     const record = item as Record<string, unknown>;
     return {
-      title: String(record.title ?? record.name ?? record.label ?? "Untitled"),
-      path: typeof record.fileName === "string" ? record.fileName : undefined,
+      title: String(
+        record.nodeName ??
+          record.title ??
+          record.name ??
+          record.label ??
+          "Untitled",
+      ),
+      path:
+        typeof record.relateDocument === "string"
+          ? record.relateDocument
+          : typeof record.fileName === "string"
+            ? record.fileName
+            : undefined,
       children: normalizeCatalogItems(record.children ?? record.childList),
     };
   });
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }
 
 function countItems(items: HarmonyCatalogItem[]): number {
