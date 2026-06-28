@@ -30,3 +30,7 @@ npx @hulistmi/hulistmi fetch /consumer/en/doc/harmonyos-guides/pipwindow-overvie
 - `/.well-known/agent-skills/hulistmi/SKILL.md`
 
 hulistmi.ai is unofficial, on-demand, transient, and not a redistribution channel.
+
+## Acknowledgements
+
+hulistmi.ai is based on [sosumi.ai](https://sosumi.ai) by [NSHipster](https://nshipster.com) ([MIT](https://github.com/NSHipster/sosumi.ai/blob/main/LICENSE.md)).

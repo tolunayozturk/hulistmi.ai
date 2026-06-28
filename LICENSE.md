@@ -1,6 +1,7 @@
 MIT License
 
-Copyright (c) 2026 hulistmi.ai
+Copyright (c) 2025 NSHipster (https://nshipster.com) — Original work (sosumi.ai)
+Copyright (c) 2026 hulistmi.ai — Derivative work
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
