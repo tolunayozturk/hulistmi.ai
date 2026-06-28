@@ -286,4 +286,4 @@ Your use of this service must comply with Huawei's Terms of Use and applicable l
 You are solely responsible for how you access and use Huawei's content through this tool.
 Do not use this service to circumvent technical measures or for redistribution.
 
-**Contact:** <info@hulistmi.ai>
+
