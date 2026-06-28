@@ -153,16 +153,19 @@ app.get("/consumer/en/doc/harmonyos-references/:path{.+}", async (c) =>
 app.get("/catalog", async (c) => {
   const catalogName = c.req.query("catalogName") ?? "harmonyos-guides";
   const language = c.req.query("language") ?? "en";
+  const depthRaw = c.req.query("depth");
+  const depth = depthRaw ? Number(depthRaw) : undefined;
   if (
     !["harmonyos-guides", "harmonyos-references"].includes(catalogName) ||
-    language !== "en"
+    language !== "en" ||
+    (depth !== undefined && (!Number.isFinite(depth) || depth < 1))
   )
     return c.json({ error: "Unsupported catalog" }, 400);
   const catalog = await fetchHarmonyOSCatalog(catalogName, language);
   setNoIndex(c, SHORT_CACHE);
   if (wantsJson(c)) return c.json(catalog);
   return c.text(
-    assertRenderedMarkdownWithinLimit(renderCatalogMarkdown(catalog)),
+    assertRenderedMarkdownWithinLimit(renderCatalogMarkdown(catalog, depth)),
     200,
     { "Content-Type": "text/markdown; charset=utf-8" },
   );

@@ -31,7 +31,7 @@ export const TOOL_DEFINITIONS = {
     description: "Fetch a HarmonyOS documentation catalog.",
     http: {
       path: "/catalog",
-      query: { catalogName: "catalogName", language: "language" },
+      query: { catalogName: "catalogName", language: "language", depth: "depth" },
     },
   },
 } as const;
@@ -97,16 +97,18 @@ export function createMcpServer(): McpServer {
           .enum(["harmonyos-guides", "harmonyos-references"])
           .default("harmonyos-guides"),
         language: z.literal("en").default("en"),
+        depth: z.number().int().min(1).optional(),
       },
       annotations: readOnlyAnnotations,
     },
-    async ({ catalogName, language }) => ({
+    async ({ catalogName, language, depth }) => ({
       content: [
         {
           type: "text",
           text: assertRenderedMarkdownWithinLimit(
             renderCatalogMarkdown(
               await fetchHarmonyOSCatalog(catalogName, language),
+              depth,
             ),
           ),
         },

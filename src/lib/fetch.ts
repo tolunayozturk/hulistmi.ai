@@ -74,9 +74,12 @@ function verifiedHeaders(request: VerifiedHuaweiRequest): HeadersInit {
   return headers;
 }
 
-async function readCappedText(response: Response): Promise<string> {
+async function readCappedText(
+  response: Response,
+  maxBytes: number,
+): Promise<string> {
   const contentLength = Number(response.headers.get("Content-Length") ?? "0");
-  if (contentLength > MAX_UPSTREAM_RESPONSE_BYTES)
+  if (contentLength > maxBytes)
     throw new UpstreamSizeError(
       "Huawei upstream response exceeded maximum size",
     );
@@ -89,7 +92,7 @@ async function readCappedText(response: Response): Promise<string> {
     const { done, value } = await reader.read();
     if (done) break;
     total += value.byteLength;
-    if (total > MAX_UPSTREAM_RESPONSE_BYTES) {
+    if (total > maxBytes) {
       await reader.cancel();
       throw new UpstreamSizeError(
         "Huawei upstream response exceeded maximum size",
@@ -109,6 +112,7 @@ async function readCappedText(response: Response): Promise<string> {
 
 export async function fetchHuaweiJson<T>(
   request: VerifiedHuaweiRequest,
+  maxBytes = MAX_UPSTREAM_RESPONSE_BYTES,
 ): Promise<T> {
   const verifiedUrl = assertAllowedHuaweiUrl(request.url);
   const controller = new AbortController();
@@ -143,7 +147,7 @@ export async function fetchHuaweiJson<T>(
 
   if (!response.ok)
     throw new Error(`Huawei upstream request failed: ${response.status}`);
-  const data = JSON.parse(await readCappedText(response)) as T & {
+  const data = JSON.parse(await readCappedText(response, maxBytes)) as T & {
     code?: number | string;
   };
   if (data.code === 404 || data.code === "404")

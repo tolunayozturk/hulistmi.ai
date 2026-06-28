@@ -1,7 +1,8 @@
 import { fetchHuaweiJson, NotFoundError, UpstreamSizeError } from "./fetch";
 import { UPSTREAM_CONTRACT } from "./upstream-contract";
 
-const MAX_CATALOG_ITEMS = 5_000;
+const MAX_CATALOG_ITEMS = 20_000;
+const MAX_CATALOG_UPSTREAM_BYTES = 5_000_000;
 const SUPPORTED_CATALOGS = new Set([
   "harmonyos-guides",
   "harmonyos-references",
@@ -34,7 +35,7 @@ export async function fetchHarmonyOSCatalog(
   const data = await fetchHuaweiJson<{
     code: number | string;
     value?: unknown;
-  }>(request);
+  }>(request, MAX_CATALOG_UPSTREAM_BYTES);
   if (data.code !== 0 && data.code !== "0")
     throw new Error("Huawei catalog response changed shape");
   const items = normalizeCatalogItems(data.value);
@@ -82,13 +83,31 @@ function countItems(items: HarmonyCatalogItem[]): number {
   );
 }
 
-export function renderCatalogMarkdown(catalog: HarmonyCatalog): string {
+function renderTreeItems(
+  items: HarmonyCatalogItem[],
+  depth: number,
+  maxDepth: number | undefined,
+): string[] {
+  if (!items.length || (maxDepth !== undefined && depth > maxDepth)) return [];
+  const lines: string[] = [];
+  for (const item of items) {
+    const indent = "  ".repeat(depth - 1);
+    lines.push(`${indent}- ${item.title}${item.path ? `: ${item.path}` : ""}`);
+    if (item.children.length)
+      lines.push(...renderTreeItems(item.children, depth + 1, maxDepth));
+  }
+  return lines;
+}
+
+export function renderCatalogMarkdown(
+  catalog: HarmonyCatalog,
+  maxDepth?: number,
+): string {
   const title =
     catalog.catalogName === "harmonyos-guides"
       ? "HarmonyOS Guides Catalog"
       : "HarmonyOS References Catalog";
   const lines = [`# ${title}`, ""];
-  for (const item of catalog.items)
-    lines.push(`- ${item.title}${item.path ? `: ${item.path}` : ""}`);
+  lines.push(...renderTreeItems(catalog.items, 1, maxDepth));
   return lines.join("\n");
 }

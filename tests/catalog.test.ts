@@ -1,5 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { fetchHarmonyOSCatalog } from "../src/lib/catalog";
+import {
+  fetchHarmonyOSCatalog,
+  renderCatalogMarkdown,
+  type HarmonyCatalog,
+} from "../src/lib/catalog";
 import { fetchHuaweiJson } from "../src/lib/fetch";
 
 vi.mock("../src/lib/fetch", () => ({
