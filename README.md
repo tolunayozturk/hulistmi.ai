@@ -243,11 +243,17 @@ npm run cf-typegen
 
 ### Publishing
 
-Publishing can be done with:
+Publishing is handled by `.github/workflows/release.yml`.
 
-```bash
-npm publish
-```
+- Trigger: pushed tags matching `v*` or manual dispatch with `tag`
+- Release step: `gh release create "$TAG_NAME" --generate-notes`
+- Publish auth: npm trusted publishing via OIDC (`id-token: write`)
+- Publish command: `npm publish --provenance --access public`
+
+> **Before first use:** configure npm OIDC for the `@hulistmi` scope
+> in your npm account settings under "Access Tokens" → "Publish OIDC Token".
+> Set the `registry-url` to match your npm registry.
+> Alternatively, you can publish manually with `npm publish`.
 
 ## Acknowledgements
 
