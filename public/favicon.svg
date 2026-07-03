@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <title>hulistmi</title>
+  <rect width="64" height="64" rx="12" fill="#0f766e"/>
+  <path d="M18 42V20h6v8h16v-8h6v22h-6v-8H24v8z" fill="#ffffff"/>
+</svg>

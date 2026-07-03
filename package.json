@@ -1,0 +1,79 @@
+{
+  "name": "@hulistmi/hulistmi",
+  "version": "1.0.3",
+  "description": "Making HarmonyOS docs AI-readable",
+  "license": "MIT",
+  "author": {
+    "name": "Tolunay Ozturk",
+    "url": "https://github.com/tolunayozturk"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tolunayozturk/hulistmi.ai"
+  },
+  "keywords": [
+    "harmonyos",
+    "huawei",
+    "arkts",
+    "arkui",
+    "documentation",
+    "mcp",
+    "cli",
+    "markdown",
+    "ai"
+  ],
+  "homepage": "https://hulistmi-ai.y6vd2dkjgb.workers.dev",
+  "bugs": {
+    "url": "https://github.com/tolunayozturk/hulistmi.ai/issues"
+  },
+  "sideEffects": false,
+  "type": "module",
+  "engines": {
+    "node": ">=20.18.1"
+  },
+  "files": [
+    "bin",
+    "src",
+    "public",
+    "wrangler.jsonc",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "bin": {
+    "hulistmi": "bin/hulistmi.mjs"
+  },
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy --minify",
+    "cli": "node ./bin/hulistmi.mjs",
+    "cf-typegen": "wrangler types --env-interface CloudflareBindings",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "format": "biome check --write --linter-enabled=false .",
+    "lint": "biome check --formatter-enabled=false .",
+    "check": "biome check --write .",
+    "check:ci": "biome check ."
+  },
+  "dependencies": {
+    "@hono/mcp": "^0.1.2",
+    "@modelcontextprotocol/sdk": "^1.17.4",
+    "cheerio": "^1.2.0",
+    "hono": "^4.9.4",
+    "tsx": "^4.22.4",
+    "zod": "^3",
+    "zod-to-json-schema": "^3.25.2"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.2.2",
+    "@changesets/cli": "^2.29.5",
+    "@changesets/changelog-github": "^0.5.1",
+    "@cloudflare/vitest-pool-workers": "^0.12.18",
+    "@vitest/ui": "^3.2.4",
+    "vitest": "^3.2.4",
+    "wrangler": "^4.32.0"
+  }
+}

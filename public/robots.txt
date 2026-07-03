@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /consumer/en/doc/harmonyos-guides/
+Disallow: /consumer/en/doc/harmonyos-references/
+Disallow: /catalog
+Disallow: /search

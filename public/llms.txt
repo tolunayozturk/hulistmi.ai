@@ -1,0 +1,28 @@
+# hulistmi-ai.y6vd2dkjgb.workers.dev
+
+## HTTP API
+
+- Fetch guide Markdown: `GET /consumer/en/doc/harmonyos-guides/<path>`
+- Fetch reference Markdown: `GET /consumer/en/doc/harmonyos-references/<path>`
+- Search: `GET /search?q=<query>`
+- Catalog: `GET /catalog?catalogName=harmonyos-guides&language=en`
+
+## MCP Integration
+
+- Endpoint: `https://hulistmi-ai.y6vd2dkjgb.workers.dev/mcp`
+- WebMCP manifest: `https://hulistmi-ai.y6vd2dkjgb.workers.dev/webmcp/manifest.json`
+- Tools: `searchHarmonyOSDocumentation`, `fetchHarmonyOSDocumentation`, `fetchHarmonyOSCatalog`
+
+## CLI
+
+- Package: `@hulistmi/hulistmi`
+- Binary: `hulistmi`
+
+## AI Agent Skill
+
+- Skill: `https://hulistmi-ai.y6vd2dkjgb.workers.dev/SKILL.md`
+- Well-known skill: `https://hulistmi-ai.y6vd2dkjgb.workers.dev/.well-known/agent-skills/hulistmi/SKILL.md`
+
+## Notice
+
+hulistmi-ai.y6vd2dkjgb.workers.dev is unofficial, on-demand, transient, not an archive, not a bulk mirror, not a redistribution channel, and not a bypass mechanism for Huawei access controls.
