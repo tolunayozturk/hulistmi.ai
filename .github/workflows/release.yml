@@ -1,0 +1,67 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  id-token: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+          package-manager-cache: false
+
+      - run: npm ci
+      - run: npm run check:ci
+      - run: npm run test:run
+
+      - name: Compute tag version
+        id: ver
+        run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Assert tag matches package.json version
+        run: |
+          pkg=$(node -p "require('./package.json').version")
+          if [ "$pkg" != "${{ steps.ver.outputs.version }}" ]; then
+            echo "::error::package.json=$pkg vs tag=${{ steps.ver.outputs.version }}"
+            exit 1
+          fi
+
+      - name: Check if version already on registry
+        id: published
+        run: |
+          if npm view "@hulistmi/hulistmi@${{ steps.ver.outputs.version }}" version >/dev/null 2>&1; then
+            echo "already-published=true" >> "$GITHUB_OUTPUT"
+            echo "Version ${{ steps.ver.outputs.version }} already on npm; skipping publish."
+          else
+            echo "already-published=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Publish to npm (trusted publishing via OIDC; provenance is automatic)
+        if: steps.published.outputs.already-published != 'true'
+        run: npm publish --provenance --access public
+
+      - name: Create GitHub release
+        if: steps.published.outputs.already-published != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            echo "Release $GITHUB_REF_NAME already exists"
+          else
+            gh release create "$GITHUB_REF_NAME" --generate-notes
+          fi
