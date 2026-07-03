@@ -39,6 +39,7 @@ jobs:
           title: "chore: version packages"
         env:
           GITHUB_TOKEN: ${{ github.token }}
+        continue-on-error: true
 
   tag:
     name: Tag version bump commit
