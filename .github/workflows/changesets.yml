@@ -34,12 +34,10 @@ jobs:
         uses: changesets/action@v1
         with:
           version: true
-          publish: false
           commit: "chore: version packages"
           title: "chore: version packages"
         env:
           GITHUB_TOKEN: ${{ github.token }}
-        continue-on-error: true
 
   tag:
     name: Tag version bump commit
