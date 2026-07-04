@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.5
+
+### Patch Changes
+
+- Centralized hardcoded values that caused incorrect behavior: the User-Agent, `/bot` page link, and rendered Markdown footer href now derive from `VERSION` and a new `PUBLIC_ORIGIN` constant instead of a stale `1.0` version and a `/#bot` fragment that pointed at the homepage rather than the `/bot` route. `src/index.ts` and `src/cli.ts` now call `generateHuaweiDocUrl` (with a new optional `catalogName` argument, byte-identical when omitted) instead of inline template literals. A new `resolveHuaweiDocUrl` helper fixes protocol-relative search-result URLs that previously produced a double origin. The HTTP `/search` guard and the MCP schema read `UPSTREAM_CONTRACT.search.maxQueryLength` instead of the duplicated literal `120`. Renamed `bodyForUIAbility` to `searchBodyTemplate` and cleared the placeholder `keyWord` (always overridden by `buildSearchBody`).
+
 ## 1.0.4
 
 ### Minor Changes
