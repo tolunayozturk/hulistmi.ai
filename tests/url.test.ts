@@ -69,3 +69,20 @@ describe("HarmonyOS URL utilities", () => {
     ).toBe("cn");
   });
 });
+
+describe("generateHuaweiDocUrl with explicit catalogName", () => {
+  it("builds a full Huawei doc URL from path parts + catalog (en)", () => {
+    expect(
+      generateHuaweiDocUrl("start-overview", "en", "harmonyos-guides"),
+    ).toBe(
+      "https://developer.huawei.com/consumer/en/doc/harmonyos-guides/start-overview",
+    );
+  });
+  it("builds a full Huawei doc URL from path parts + catalog (cn)", () => {
+    expect(
+      generateHuaweiDocUrl("start-overview", "cn", "harmonyos-guides"),
+    ).toBe(
+      "https://developer.huawei.com/consumer/cn/doc/harmonyos-guides/start-overview",
+    );
+  });
+});

@@ -1,6 +1,7 @@
 import * as cheerio from "cheerio";
 import { LABELS } from "./labels";
 import { DEFAULT_LANGUAGE, type Language } from "./language";
+import { PUBLIC_ORIGIN } from "./origin";
 import type { HarmonyDocumentValue } from "./types";
 import { generateHuaweiDocUrl } from "./url";
 
@@ -215,5 +216,5 @@ export function renderDocumentMarkdown(
   const title = value.title || LABELS[language].untitled;
   const sourceUrl = generateHuaweiDocUrl(path, language);
   const body = htmlToMarkdown(value.content?.content ?? "");
-  return `---\ntitle: ${title}\nsource: ${sourceUrl}\ntimestamp: ${new Date().toISOString()}\ncategory: ${category}\nlanguage: ${language}\n---\n\n# ${title}\n\n${body}\n\n---\n\n*Extracted by [hulistmi.ai](https://hulistmi-ai.y6vd2dkjgb.workers.dev) - Making HarmonyOS docs AI-readable.*\n*This is unofficial content. Source documentation belongs to Huawei.*\n`;
+  return `---\ntitle: ${title}\nsource: ${sourceUrl}\ntimestamp: ${new Date().toISOString()}\ncategory: ${category}\nlanguage: ${language}\n---\n\n# ${title}\n\n${body}\n\n---\n\n*Extracted by [hulistmi.ai](${PUBLIC_ORIGIN}) - Making HarmonyOS docs AI-readable.*\n*This is unofficial content. Source documentation belongs to Huawei.*\n`;
 }

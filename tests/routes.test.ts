@@ -27,7 +27,6 @@ vi.mock("../src/lib/fetch", () => ({
   MAX_RENDERED_MARKDOWN_BYTES: 524_288,
   MAX_UPSTREAM_RESPONSE_BYTES: 1_048_576,
   UPSTREAM_TIMEOUT_MS: 10_000,
-  HULISTMI_USER_AGENT: "hulistmi-ai/1.0",
 }));
 
 describe("Hono app routing", () => {
@@ -76,5 +75,26 @@ describe("Hono app routing", () => {
       new Request("https://hulistmi.ai/consumer/cn/doc/bogus-catalog/foo"),
     );
     expect(res.status).toBe(400);
+  });
+});
+
+describe("GET /bot", () => {
+  it("returns 200 and identifies the bot without the legacy #bot anchor", async () => {
+    const res = await SELF.fetch(new Request("https://hulistmi.ai/bot"));
+    expect(res.status).toBe(200);
+    const body = await res.text();
+    expect(body).toContain("hulistmi-ai/");
+    expect(body).toContain("/bot)");
+    expect(body).not.toContain("/#bot");
+  });
+});
+
+describe("GET /search query-length guarding at HTTP layer", () => {
+  it("rejects an overlong query with 400 before invoking upstream", async () => {
+    const res = await SELF.fetch(
+      new Request(`https://hulistmi.ai/search?q=${"x".repeat(121)}`),
+    );
+    expect(res.status).toBe(400);
+    expect(fetchHuaweiJsonMock).not.toHaveBeenCalled();
   });
 });

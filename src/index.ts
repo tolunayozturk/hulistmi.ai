@@ -12,6 +12,7 @@ import {
 import { fetchGuidePageData, renderGuideMarkdown } from "./lib/guides";
 import { DEFAULT_LANGUAGE, isLanguage, type Language } from "./lib/language";
 import { createMcpServer, MCP_SERVER_INFO } from "./lib/mcp";
+import { PUBLIC_ORIGIN } from "./lib/origin";
 import { enforceRateLimit } from "./lib/rate-limit";
 import {
   fetchReferencePageData,
@@ -25,6 +26,9 @@ import {
   skillHeaders,
   skillIndexHeaders,
 } from "./lib/skill";
+import { UPSTREAM_CONTRACT } from "./lib/upstream-contract";
+import { generateHuaweiDocUrl } from "./lib/url";
+import { VERSION } from "./lib/version";
 import { buildWebMcpManifest } from "./lib/webmcp";
 
 export interface Env {
@@ -109,7 +113,7 @@ async function renderDocument(
       ? renderGuideMarkdown(data, path, language)
       : renderReferenceMarkdown(data, path, language);
   const bounded = assertRenderedMarkdownWithinLimit(content);
-  const sourceUrl = `https://developer.huawei.com/consumer/${language}/doc/${catalogName}/${path}`;
+  const sourceUrl = generateHuaweiDocUrl(path, language, catalogName);
   setNoIndex(c, DOC_CACHE);
   c.header("Content-Location", sourceUrl);
   c.header("ETag", await sha256(bounded));
@@ -136,7 +140,7 @@ app.get("/", async (c) =>
 
 app.get("/bot", (c) =>
   c.text(
-    "hulistmi.ai uses transparent, on-demand requests for HarmonyOS documentation and identifies itself with hulistmi-ai/1.0 (+https://hulistmi-ai.y6vd2dkjgb.workers.dev/#bot).",
+    `hulistmi.ai uses transparent, on-demand requests for HarmonyOS documentation and identifies itself with hulistmi-ai/${VERSION} (+${PUBLIC_ORIGIN}/bot).`,
     200,
     {
       "Content-Type": "text/plain; charset=utf-8",
@@ -180,7 +184,7 @@ app.get("/catalog", async (c) => {
 
 app.get("/search", async (c) => {
   const query = c.req.query("q") ?? "";
-  if (!query.trim() || query.length > 120)
+  if (!query.trim() || query.length > UPSTREAM_CONTRACT.search.maxQueryLength)
     return c.json({ error: "Invalid search query" }, 400);
   const languageParam = c.req.query("language") ?? DEFAULT_LANGUAGE;
   if (!isLanguage(languageParam))

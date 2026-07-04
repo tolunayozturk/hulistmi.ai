@@ -6,6 +6,7 @@ import { fetchGuidePageData, renderGuideMarkdown } from "./guides";
 import { DEFAULT_LANGUAGE } from "./language";
 import { fetchReferencePageData, renderReferenceMarkdown } from "./reference";
 import { renderSearchMarkdown, searchHarmonyOSDocs } from "./search";
+import { UPSTREAM_CONTRACT } from "./upstream-contract";
 import { VERSION } from "./version";
 
 export const MCP_SERVER_INFO = {
@@ -23,7 +24,7 @@ const readOnlyAnnotations = {
 const languageSchema = z.enum(["en", "cn"]).default(DEFAULT_LANGUAGE);
 
 export const SEARCH_INPUT_SCHEMA = {
-  query: z.string().min(1).max(120),
+  query: z.string().min(1).max(UPSTREAM_CONTRACT.search.maxQueryLength),
   language: languageSchema,
 };
 

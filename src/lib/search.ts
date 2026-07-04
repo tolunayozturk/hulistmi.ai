@@ -2,6 +2,7 @@ import { fetchHuaweiJson } from "./fetch";
 import { LABELS } from "./labels";
 import { DEFAULT_LANGUAGE, type Language } from "./language";
 import { UPSTREAM_CONTRACT } from "./upstream-contract";
+import { resolveHuaweiDocUrl } from "./url";
 
 export interface SearchResult {
   title: string;
@@ -35,7 +36,7 @@ function buildSearchBody(query: string, language: Language): unknown {
   // vertical is populated on the upstream, so it stays fixed at "en" regardless
   // of the requested result language. The top-level `language` field controls
   // the content language of returned results.
-  const template = UPSTREAM_CONTRACT.search.bodyForUIAbility;
+  const template = UPSTREAM_CONTRACT.search.searchBodyTemplate;
   return {
     ...template,
     language,
@@ -78,9 +79,7 @@ function normalizeSearchResults(
     .flatMap((group) => group.developerInfos ?? [])
     .map((item) => ({
       title: item.name ?? LABELS[language].untitled,
-      url: item.url?.startsWith("http")
-        ? item.url
-        : `https://developer.huawei.com${item.url ?? ""}`,
+      url: resolveHuaweiDocUrl(item.url),
       description: item.description ?? item.highlightInfos?.join(" ") ?? "",
       breadcrumbs: [],
       tags: parseTags(item.ext),

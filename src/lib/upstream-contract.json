@@ -79,13 +79,13 @@
     "url": "https://svc-drcn.developer.huawei.com/community/servlet/consumer/partnerCommunityService/developer/search",
     "headers": {},
     "responseHeaders": { "content-type": "application/json" },
-    "bodyForUIAbility": {
+    "searchBodyTemplate": {
       "deviceId": "ESN",
       "deviceType": "1",
       "country": "CN",
       "requestOrgin": 5,
       "whetherToCorrect": 1,
-      "keyWord": "UIAbility",
+      "keyWord": "",
       "cutPage": { "offset": 0, "length": 20 },
       "developerVertical": { "categoryList": [1] }
     },

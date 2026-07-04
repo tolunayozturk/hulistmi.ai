@@ -1,12 +1,13 @@
+import { PUBLIC_ORIGIN } from "./origin";
 import { UPSTREAM_CONTRACT } from "./upstream-contract";
+import { VERSION } from "./version";
 
 export class NotFoundError extends Error {}
 export class UpstreamPolicyError extends Error {}
 export class UpstreamSizeError extends Error {}
 export class UpstreamTimeoutError extends Error {}
 
-export const HULISTMI_USER_AGENT =
-  "hulistmi-ai/1.0 (+https://hulistmi.ai/#bot)";
+export const HULISTMI_USER_AGENT = `hulistmi-ai/${VERSION} (+${PUBLIC_ORIGIN}/bot)`;
 export const UPSTREAM_TIMEOUT_MS = 10_000;
 export const MAX_UPSTREAM_RESPONSE_BYTES = 1_048_576;
 export const MAX_RENDERED_MARKDOWN_BYTES = 524_288;
@@ -44,7 +45,7 @@ function collectVerifiedRequests(): VerifiedHuaweiRequest[] {
     {
       url: UPSTREAM_CONTRACT.search.url,
       headers: UPSTREAM_CONTRACT.search.headers,
-      body: UPSTREAM_CONTRACT.search.bodyForUIAbility,
+      body: UPSTREAM_CONTRACT.search.searchBodyTemplate,
     },
   ];
 }

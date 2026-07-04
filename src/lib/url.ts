@@ -1,6 +1,6 @@
 import { DEFAULT_LANGUAGE, docPrefix, type Language } from "./language";
 
-const HUAWEI_DOC_ORIGIN = "https://developer.huawei.com";
+export const HUAWEI_DOC_ORIGIN = "https://developer.huawei.com";
 
 export function normalizeDocsPath(path: string): string {
   return path.trim().replace(/^\/+/, "").replace(/\/+$/, "");
@@ -20,8 +20,19 @@ function matchDocPrefix(
 export function generateHuaweiDocUrl(
   path: string,
   language: Language = DEFAULT_LANGUAGE,
+  catalogName?: string,
 ): string {
-  return `${HUAWEI_DOC_ORIGIN}${docPrefix(language)}${normalizeDocsPath(path)}`;
+  const tail = catalogName
+    ? `${normalizeDocsPath(catalogName)}/${normalizeDocsPath(path)}`
+    : normalizeDocsPath(path);
+  return `${HUAWEI_DOC_ORIGIN}${docPrefix(language)}${tail}`;
+}
+
+export function resolveHuaweiDocUrl(raw: string | undefined): string {
+  if (!raw) return HUAWEI_DOC_ORIGIN;
+  if (raw.startsWith("http://") || raw.startsWith("https://")) return raw;
+  if (raw.startsWith("//")) return `https:${raw}`;
+  return `${HUAWEI_DOC_ORIGIN}${raw.startsWith("/") ? raw : `/${raw}`}`;
 }
 
 export function isValidHuaweiDocUrl(input: string): boolean {

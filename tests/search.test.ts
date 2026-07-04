@@ -11,6 +11,12 @@ const searchMock = vi.fn(async () => ({
           description: "Ability lifecycle",
           ext: JSON.stringify({ domain: "HarmonyOS", nextSubType: "API" }),
         },
+        {
+          name: "ProtocolRelativeDoc",
+          url: "//developer.huawei.com/consumer/en/doc/x",
+          description: "PRURL",
+          ext: JSON.stringify({ domain: "HarmonyOS", nextSubType: "API" }),
+        },
       ],
     },
   ],
@@ -56,5 +62,12 @@ describe("HarmonyOS search", () => {
       developerVertical: { language: "en" },
     });
     expect(renderSearchMarkdown(result)).toContain("HarmonyOS 搜索：UIAbility");
+  });
+
+  it("normalizes protocol-relative URLs (//host) to absolute https", async () => {
+    const result = await searchHarmonyOSDocs("UIAbility");
+    expect(result.results[1].url).toBe(
+      "https://developer.huawei.com/consumer/en/doc/x",
+    );
   });
 });

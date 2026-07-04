@@ -6,7 +6,7 @@ import {
   renderReferenceMarkdown,
 } from "./lib/reference";
 import { renderSearchMarkdown, searchHarmonyOSDocs } from "./lib/search";
-import { splitDocsPath } from "./lib/url";
+import { generateHuaweiDocUrl, splitDocsPath } from "./lib/url";
 
 export async function main(argv = process.argv.slice(2)): Promise<void> {
   const args = parseCliArgs(argv);
@@ -21,7 +21,7 @@ export async function main(argv = process.argv.slice(2)): Promise<void> {
   if (args.command === "fetch") {
     const { path, language } = resolveFetchEndpoint(args.input);
     const { catalogName, pagePath } = splitDocsPath(path);
-    const sourceUrl = `https://developer.huawei.com/consumer/${language}/doc/${catalogName}/${pagePath}`;
+    const sourceUrl = generateHuaweiDocUrl(pagePath, language, catalogName);
     if (catalogName === "harmonyos-guides") {
       const data = await fetchGuidePageData(pagePath, language);
       const content = renderGuideMarkdown(data, pagePath, language);
