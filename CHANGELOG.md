@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.4
+
+### Minor Changes
+
+- Add Chinese (`cn`) language support alongside English (`en`, default) across the HTTP API, MCP tools, and CLI. `/consumer/cn/doc/<catalog>/<path>` routes serve Chinese-rendered Markdown, `/catalog?language=cn` returns the Chinese catalog tree, `?language=cn` is accepted on `/search`, and the three MCP tools gain an optional `language: "en" | "cn"` input (default `"en"`). CLI `fetch` derives language from the URL prefix and no longer accepts bare shorthand paths; CLI `search` gains a `--language`/`-l` flag. Rendered section labels and document frontmatter are localized per language. `MCP_SERVER_INFO.version` is now sourced from `package.json` via `sync-version.mjs` to close the drift between the hardcoded version and the package version.
+
 ## 1.0.3
 
 ### Patch Changes

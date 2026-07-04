@@ -7,6 +7,7 @@ import {
   SEARCH_INPUT_SCHEMA,
   TOOL_DEFINITIONS,
 } from "../src/lib/mcp";
+import { VERSION } from "../src/lib/version";
 
 describe("MCP tool metadata", () => {
   it("exposes HarmonyOS tools", () => {
@@ -16,7 +17,7 @@ describe("MCP tool metadata", () => {
       "fetchHarmonyOSDocumentation",
       "fetchHarmonyOSCatalog",
     ]);
-    expect(MCP_SERVER_INFO.version).toBe("1.0.3");
+    expect(MCP_SERVER_INFO.version).toBe(VERSION);
   });
 
   it("input schemas accept language: 'cn' explicitly", () => {
