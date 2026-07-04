@@ -1,20 +1,19 @@
-name: Changesets
+name: Version bump
 
 on:
   push:
     branches: [master]
 
 concurrency:
-  group: changesets-${{ github.ref }}
+  group: version-bump-${{ github.ref }}
   cancel-in-progress: true
 
 permissions:
   contents: write
-  pull-requests: write
 
 jobs:
-  version-pr:
-    name: Open or update Version Packages PR
+  bump:
+    name: Apply changesets, sync version.ts, tag
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -29,44 +28,38 @@ jobs:
 
       - run: npm ci
 
-      - name: Create or update Version Packages PR
-        id: changesets
-        uses: changesets/action@v1
-        with:
-          version: true
-          commit: "chore: version packages"
-          title: "chore: version packages"
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
+      - name: Apply changesets
+        run: npx changeset version
 
-  tag:
-    name: Tag version bump commit
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    if: "github.event.head_commit.message == 'chore: version packages'"
-    steps:
-      - uses: actions/checkout@v6
-        with:
-          fetch-depth: 2
+      - name: Sync src/lib/version.ts
+        run: node scripts/sync-version.mjs
 
-      - name: Compute package version
-        id: ver
-        run: echo "version=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
-
-      - name: Skip if tag already exists
-        id: exists
+      - name: Stage changes
         run: |
-          if git ls-remote --tags origin "refs/tags/v${{ steps.ver.outputs.version }}" | grep -q .; then
-            echo "already-exists=true" >> "$GITHUB_OUTPUT"
-            echo "Tag v${{ steps.ver.outputs.version }} already exists on remote; skipping."
+          git add -A
+          if git diff --cached --quiet; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "No pending changesets; nothing to bump."
           else
-            echo "already-exists=false" >> "$GITHUB_OUTPUT"
+            echo "changed=true" >> "$GITHUB_OUTPUT"
           fi
+        id: stage
 
-      - name: Create and push git tag
-        if: steps.exists.outputs.already-exists != 'true'
-        env:
-          GH_TOKEN: ${{ github.token }}
+      - name: Commit and push bump
+        if: steps.stage.outputs.changed == 'true'
         run: |
-          git tag "v${{ steps.ver.outputs.version }}"
-          git push origin "v${{ steps.ver.outputs.version }}"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "chore: version packages"
+          git push origin master
+
+      - name: Push tag if missing
+        if: steps.stage.outputs.changed == 'true'
+        run: |
+          version="$(node -p "require('./package.json').version")"
+          if git ls-remote --tags origin "refs/tags/v${version}" | grep -q .; then
+            echo "Tag v${version} already exists on remote; skipping."
+          else
+            git tag "v${version}"
+            git push origin "v${version}"
+          fi
