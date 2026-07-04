@@ -31,10 +31,21 @@ https://hulistmi-ai.y6vd2dkjgb.workers.dev/consumer/en/doc/harmonyos-guides/star
 
 This works for all HarmonyOS guides and API reference documentation.
 
+Both English (`en`, default) and Chinese (`cn`) documentation are supported.
+For `fetch`, the language is encoded in the URL prefix (`/consumer/en/doc/...`
+or `/consumer/cn/doc/...`). For `search` and `catalog`, pass `?language=en|cn`
+(default `en`).
+
 Search is also supported:
 
 ```
-https://hulistmi-ai.y6vd2dkjgb.workers.dev/search?q=UIAbility
+https://hulistmi-ai.y6vd2dkjgb.workers.dev/search?q=UIAbility&language=en
+```
+
+Chinese-language search:
+
+```
+https://hulistmi-ai.y6vd2dkjgb.workers.dev/search?q=UIAbility&language=cn
 ```
 
 And you can browse the full documentation catalog:
@@ -43,7 +54,13 @@ And you can browse the full documentation catalog:
 https://hulistmi-ai.y6vd2dkjgb.workers.dev/catalog?catalogName=harmonyos-guides&language=en
 ```
 
-> Only English (`en`) documentation is currently supported.
+The Chinese catalog is available via `language=cn`:
+
+```
+https://hulistmi-ai.y6vd2dkjgb.workers.dev/catalog?catalogName=harmonyos-guides&language=cn
+```
+
+> Supported languages: English (`en`) and Chinese (`cn`). `en` is the default.
 
 ### MCP Integration
 
@@ -67,15 +84,15 @@ you can proxy over stdio using `mcp-remote`:
 #### Available Tools
 
 - `searchHarmonyOSDocumentation` - Searches HarmonyOS developer documentation
-  - Parameters: `query` (string)
+  - Parameters: `query` (string), `language` (`"en" | "cn"`, default `"en"`)
   - Returns structured results with titles, URLs, and descriptions
 
 - `fetchHarmonyOSDocumentation` - Fetches a HarmonyOS documentation page as Markdown
-  - Parameters: `path` (string) — Documentation path (e.g., `/consumer/en/doc/harmonyos-guides/start-overview`)
+  - Parameters: `path` (string), `language` (`"en" | "cn"`, default `"en"`) — Documentation path (e.g., `/consumer/en/doc/harmonyos-guides/start-overview`)
   - Returns content as Markdown
 
 - `fetchHarmonyOSCatalog` - Fetches a HarmonyOS documentation catalog tree
-  - Parameters: `catalogName` ("harmonyos-guides" | "harmonyos-references"), `depth` (number, optional)
+  - Parameters: `catalogName` ("harmonyos-guides" | "harmonyos-references"), `language` (`"en" | "cn"`, default `"en"`), `depth` (number, optional)
   - Returns the catalog as a Markdown listing
 
 ### WebMCP
@@ -105,19 +122,19 @@ Then use `hulistmi` directly:
 
 ```bash
 hulistmi fetch https://developer.huawei.com/consumer/en/doc/harmonyos-guides/start-overview
+hulistmi fetch https://developer.huawei.com/consumer/cn/doc/harmonyos-guides/start-overview
 ```
 
-Short paths work too:
-
-```bash
-hulistmi fetch /consumer/en/doc/harmonyos-guides/start-overview
-hulistmi fetch harmonyos-guides/start-overview
-```
+The fetch command always derives the documentation language from the URL prefix
+(`/consumer/en/doc/...` or `/consumer/cn/doc/...`). Bare shorthand paths like
+`harmonyos-guides/start-overview` are no longer accepted — pass the full Huawei
+doc URL or the full `/consumer/{en|cn}/doc/<catalog>/<path>` prefixed path.
 
 Search documentation:
 
 ```bash
 hulistmi search UIAbility
+hulistmi search UIAbility --language cn
 ```
 
 Run a local development server (requires a clone of this repo and `wrangler`;
@@ -134,6 +151,7 @@ Use JSON output for scripts:
 ```bash
 hulistmi fetch /consumer/en/doc/harmonyos-guides/start-overview --json
 hulistmi search UIAbility --json
+hulistmi search UIAbility --language cn --json
 ```
 
 ### AI Agent Skill

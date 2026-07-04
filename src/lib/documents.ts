@@ -3,6 +3,7 @@ import {
   NotFoundError,
   type VerifiedHuaweiRequest,
 } from "./fetch";
+import { DEFAULT_LANGUAGE, type Language } from "./language";
 import type { HarmonyDocumentResponse, HarmonyDocumentValue } from "./types";
 import { UPSTREAM_CONTRACT } from "./upstream-contract";
 
@@ -24,6 +25,8 @@ interface GrayUserResponse {
   };
 }
 
+type BodyWithLanguage = Record<string, unknown> & { language: Language };
+
 const DOCUMENTS = UPSTREAM_CONTRACT.documents as Record<
   string,
   DocumentContractEntry
@@ -42,9 +45,13 @@ const GET_CENTER_DOCUMENT_URL =
 export async function fetchHarmonyDocumentPageData(
   catalogName: "harmonyos-guides" | "harmonyos-references",
   path: string,
+  language: Language = DEFAULT_LANGUAGE,
 ): Promise<HarmonyDocumentValue> {
-  const entry =
-    DOCUMENTS[documentKey(catalogName, path)] ?? buildEntry(catalogName, path);
+  const entry = withLanguage(
+    DOCUMENTS[documentKey(catalogName, path)] ??
+      buildEntry(catalogName, path, language),
+    language,
+  );
 
   const grayResponse = await fetchHuaweiJson<GrayUserResponse>(
     entry.checkCenterGrayUser,
@@ -56,12 +63,32 @@ export async function fetchHarmonyDocumentPageData(
             getCenterRootNodeTree: entry.getCenterRootNodeTree,
             getCenterDocument: entry.getCenterDocument,
           }
-        : buildCenterRequests(grayResponse, path);
+        : buildCenterRequests(grayResponse, path, language);
     await fetchHuaweiJson(centerRequests.getCenterRootNodeTree);
     return fetchAndValidateDocument(centerRequests.getCenterDocument);
   }
 
   return fetchAndValidateDocument(entry.getDocumentById);
+}
+
+function withLanguage(
+  entry: DocumentContractEntry,
+  language: Language,
+): DocumentContractEntry {
+  const stamp = (request: VerifiedHuaweiRequest): VerifiedHuaweiRequest => ({
+    ...request,
+    body: { ...request.body, language } as BodyWithLanguage,
+  });
+  const stampOptional = (
+    request: VerifiedHuaweiRequest | undefined,
+  ): VerifiedHuaweiRequest | undefined =>
+    request ? stamp(request) : undefined;
+  return {
+    checkCenterGrayUser: stamp(entry.checkCenterGrayUser),
+    getDocumentById: stamp(entry.getDocumentById),
+    getCenterRootNodeTree: stampOptional(entry.getCenterRootNodeTree),
+    getCenterDocument: stampOptional(entry.getCenterDocument),
+  };
 }
 
 function documentKey(
@@ -74,6 +101,7 @@ function documentKey(
 function buildEntry(
   catalogName: "harmonyos-guides" | "harmonyos-references",
   path: string,
+  language: Language,
 ): DocumentContractEntry {
   const slug = normalizeDocumentSlug(path);
   if (!DOCUMENT_SLUG_PATTERN.test(slug))
@@ -85,7 +113,7 @@ function buildEntry(
       headers: {},
       body: {
         catalogName,
-        language: "en",
+        language,
         fileName: slug,
         grayId: GRAY_ID,
       },
@@ -97,7 +125,7 @@ function buildEntry(
         objectId: slug,
         nodeAlias: null,
         catalogName,
-        language: "en",
+        language,
       },
     },
   };
@@ -117,6 +145,7 @@ function isCenterDocument(response: GrayUserResponse): boolean {
 function buildCenterRequests(
   response: GrayUserResponse,
   path: string,
+  language: Language,
 ): Pick<DocumentContractEntry, "getCenterRootNodeTree" | "getCenterDocument"> {
   const value = response.value;
   const fileName = value?.filename ?? normalizeDocumentSlug(path);
@@ -129,7 +158,7 @@ function buildCenterRequests(
 
   const body = {
     centerPrefix: value.centerPrefix,
-    language: "en",
+    language,
     level2NodeAlias: value.level2NodeAlias,
     isApi: value.isApi ? 1 : 0,
     fileName,

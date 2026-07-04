@@ -10,6 +10,7 @@ import {
   UpstreamSizeError,
 } from "./lib/fetch";
 import { fetchGuidePageData, renderGuideMarkdown } from "./lib/guides";
+import { DEFAULT_LANGUAGE, isLanguage, type Language } from "./lib/language";
 import { createMcpServer, MCP_SERVER_INFO } from "./lib/mcp";
 import { enforceRateLimit } from "./lib/rate-limit";
 import {
@@ -37,6 +38,7 @@ const app = new Hono<{ Bindings: Env }>();
 const ROBOTS_HEADER = "noindex, nofollow, noarchive";
 const DOC_CACHE = "public, max-age=3600, s-maxage=86400";
 const SHORT_CACHE = "public, max-age=300, s-maxage=600";
+const SUPPORTED_CATALOGS = ["harmonyos-guides", "harmonyos-references"];
 
 function origin(c: Context): string {
   return new URL(c.req.url).origin;
@@ -96,17 +98,18 @@ async function renderDocument(
   c: Context,
   catalogName: "harmonyos-guides" | "harmonyos-references",
   path: string,
+  language: Language,
 ): Promise<Response> {
   const data =
     catalogName === "harmonyos-guides"
-      ? await fetchGuidePageData(path)
-      : await fetchReferencePageData(path);
+      ? await fetchGuidePageData(path, language)
+      : await fetchReferencePageData(path, language);
   const content =
     catalogName === "harmonyos-guides"
-      ? renderGuideMarkdown(data, path)
-      : renderReferenceMarkdown(data, path);
+      ? renderGuideMarkdown(data, path, language)
+      : renderReferenceMarkdown(data, path, language);
   const bounded = assertRenderedMarkdownWithinLimit(content);
-  const sourceUrl = `https://developer.huawei.com/consumer/en/doc/${catalogName}/${path}`;
+  const sourceUrl = `https://developer.huawei.com/consumer/${language}/doc/${catalogName}/${path}`;
   setNoIndex(c, DOC_CACHE);
   c.header("Content-Location", sourceUrl);
   c.header("ETag", await sha256(bounded));
@@ -125,8 +128,7 @@ async function publicLimit(c: Context, next: () => Promise<void>) {
 app.use("/search", publicLimit);
 app.use("/catalog", publicLimit);
 app.use("/mcp", publicLimit);
-app.use("/consumer/en/doc/harmonyos-guides/*", publicLimit);
-app.use("/consumer/en/doc/harmonyos-references/*", publicLimit);
+app.use("/consumer/:lang/doc/*", publicLimit);
 
 app.get("/", async (c) =>
   c.env.ASSETS.fetch(new Request(new URL("/index.html", c.req.url))),
@@ -143,25 +145,30 @@ app.get("/bot", (c) =>
   ),
 );
 
-app.get("/consumer/en/doc/harmonyos-guides/:path{.+}", async (c) =>
-  renderDocument(c, "harmonyos-guides", c.req.param("path")),
-);
-app.get("/consumer/en/doc/harmonyos-references/:path{.+}", async (c) =>
-  renderDocument(c, "harmonyos-references", c.req.param("path")),
-);
+app.get("/consumer/:lang/doc/:catalog/:path{.+}", async (c) => {
+  const lang = c.req.param("lang");
+  if (!isLanguage(lang)) return c.json({ error: "Unsupported language" }, 400);
+  const catalogName = c.req.param("catalog");
+  if (!SUPPORTED_CATALOGS.includes(catalogName))
+    return c.json({ error: "Unsupported catalog" }, 400);
+  return renderDocument(
+    c,
+    catalogName as "harmonyos-guides" | "harmonyos-references",
+    c.req.param("path"),
+    lang,
+  );
+});
 
 app.get("/catalog", async (c) => {
   const catalogName = c.req.query("catalogName") ?? "harmonyos-guides";
-  const language = c.req.query("language") ?? "en";
+  const languageParam = c.req.query("language") ?? DEFAULT_LANGUAGE;
+  if (!SUPPORTED_CATALOGS.includes(catalogName) || !isLanguage(languageParam))
+    return c.json({ error: "Unsupported catalog" }, 400);
   const depthRaw = c.req.query("depth");
   const depth = depthRaw ? Number(depthRaw) : undefined;
-  if (
-    !["harmonyos-guides", "harmonyos-references"].includes(catalogName) ||
-    language !== "en" ||
-    (depth !== undefined && (!Number.isFinite(depth) || depth < 1))
-  )
+  if (depth !== undefined && (!Number.isFinite(depth) || depth < 1))
     return c.json({ error: "Unsupported catalog" }, 400);
-  const catalog = await fetchHarmonyOSCatalog(catalogName, language);
+  const catalog = await fetchHarmonyOSCatalog(catalogName, languageParam);
   setNoIndex(c, SHORT_CACHE);
   if (wantsJson(c)) return c.json(catalog);
   return c.text(
@@ -175,7 +182,10 @@ app.get("/search", async (c) => {
   const query = c.req.query("q") ?? "";
   if (!query.trim() || query.length > 120)
     return c.json({ error: "Invalid search query" }, 400);
-  const result = await searchHarmonyOSDocs(query);
+  const languageParam = c.req.query("language") ?? DEFAULT_LANGUAGE;
+  if (!isLanguage(languageParam))
+    return c.json({ error: "Unsupported language" }, 400);
+  const result = await searchHarmonyOSDocs(query, languageParam);
   setNoIndex(c, SHORT_CACHE);
   if (wantsJson(c)) return c.json(result);
   return c.text(

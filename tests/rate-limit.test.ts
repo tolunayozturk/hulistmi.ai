@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { enforceRateLimit } from "../src/lib/rate-limit";
 
 describe("public route rate limits", () => {
@@ -16,5 +16,16 @@ describe("public route rate limits", () => {
         RATE_LIMITER: { limit: async () => ({ success: true }) },
       }),
     ).resolves.toBeNull();
+  });
+
+  it("rate-limits /consumer/cn/doc/... under the shared 'consumer' bucket", async () => {
+    const limiter = { limit: vi.fn(async () => ({ success: true })) };
+    await enforceRateLimit(
+      new Request(
+        "https://hulistmi.ai/consumer/cn/doc/harmonyos-guides/start-overview",
+      ),
+      { RATE_LIMITER: limiter },
+    );
+    expect(limiter.limit).toHaveBeenCalledWith({ key: "anonymous:consumer" });
   });
 });

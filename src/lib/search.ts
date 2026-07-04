@@ -1,4 +1,6 @@
 import { fetchHuaweiJson } from "./fetch";
+import { LABELS } from "./labels";
+import { DEFAULT_LANGUAGE, type Language } from "./language";
 import { UPSTREAM_CONTRACT } from "./upstream-contract";
 
 export interface SearchResult {
@@ -8,6 +10,12 @@ export interface SearchResult {
   breadcrumbs: string[];
   tags: string[];
   type: string;
+}
+
+export interface SearchResponse {
+  query: string;
+  language: Language;
+  results: SearchResult[];
 }
 
 interface HuaweiSearchResponse {
@@ -22,9 +30,27 @@ interface HuaweiDeveloperInfo {
   ext?: string;
 }
 
+function buildSearchBody(query: string, language: Language): unknown {
+  // `developerVertical.language` is the docs-vertical selector; only the "en"
+  // vertical is populated on the upstream, so it stays fixed at "en" regardless
+  // of the requested result language. The top-level `language` field controls
+  // the content language of returned results.
+  const template = UPSTREAM_CONTRACT.search.bodyForUIAbility;
+  return {
+    ...template,
+    language,
+    keyWord: query,
+    developerVertical: {
+      ...template.developerVertical,
+      language: "en",
+    },
+  };
+}
+
 export async function searchHarmonyOSDocs(
   query: string,
-): Promise<{ query: string; results: SearchResult[] }> {
+  language: Language = DEFAULT_LANGUAGE,
+): Promise<SearchResponse> {
   const trimmed = query.trim();
   if (!trimmed) throw new Error("Search query is required");
   if (trimmed.length > UPSTREAM_CONTRACT.search.maxQueryLength)
@@ -32,22 +58,26 @@ export async function searchHarmonyOSDocs(
   const data = await fetchHuaweiJson<HuaweiSearchResponse>({
     url: UPSTREAM_CONTRACT.search.url,
     headers: UPSTREAM_CONTRACT.search.headers,
-    body: { ...UPSTREAM_CONTRACT.search.bodyForUIAbility, keyWord: trimmed },
+    body: buildSearchBody(trimmed, language),
   });
   return {
     query: trimmed,
-    results: normalizeSearchResults(data).slice(
+    language,
+    results: normalizeSearchResults(data, language).slice(
       0,
       UPSTREAM_CONTRACT.search.maxLength,
     ),
   };
 }
 
-function normalizeSearchResults(data: HuaweiSearchResponse): SearchResult[] {
+function normalizeSearchResults(
+  data: HuaweiSearchResponse,
+  language: Language,
+): SearchResult[] {
   return (data.searchResult ?? [])
     .flatMap((group) => group.developerInfos ?? [])
     .map((item) => ({
-      title: item.name ?? "Untitled",
+      title: item.name ?? LABELS[language].untitled,
       url: item.url?.startsWith("http")
         ? item.url
         : `https://developer.huawei.com${item.url ?? ""}`,
@@ -68,11 +98,9 @@ function parseTags(ext: string | undefined): string[] {
   }
 }
 
-export function renderSearchMarkdown(result: {
-  query: string;
-  results: SearchResult[];
-}): string {
-  const lines = [`# HarmonyOS search: ${result.query}`, ""];
+export function renderSearchMarkdown(result: SearchResponse): string {
+  const labels = LABELS[result.language];
+  const lines = [`# ${labels.searchHeader(result.query)}`, ""];
   for (const item of result.results) {
     lines.push(`- [${item.title}](${item.url})`);
     if (item.description) lines.push(`  ${item.description}`);

@@ -1,4 +1,6 @@
 import { fetchHuaweiJson, NotFoundError, UpstreamSizeError } from "./fetch";
+import { LABELS } from "./labels";
+import { DEFAULT_LANGUAGE, type Language } from "./language";
 import { UPSTREAM_CONTRACT } from "./upstream-contract";
 
 const MAX_CATALOG_ITEMS = 20_000;
@@ -16,35 +18,40 @@ export interface HarmonyCatalogItem {
 
 export interface HarmonyCatalog {
   catalogName: string;
-  language: "en";
+  language: Language;
   items: HarmonyCatalogItem[];
 }
 
 export async function fetchHarmonyOSCatalog(
   catalogName: string,
-  language = "en",
+  language: Language = DEFAULT_LANGUAGE,
 ): Promise<HarmonyCatalog> {
   if (!SUPPORTED_CATALOGS.has(catalogName))
     throw new NotFoundError("Unsupported HarmonyOS catalog");
-  if (language !== "en")
-    throw new Error("Unsupported HarmonyOS catalog language");
-  const request =
+  const baseRequest =
     UPSTREAM_CONTRACT.catalogs[
       catalogName as keyof typeof UPSTREAM_CONTRACT.catalogs
     ].request;
+  const request = {
+    ...baseRequest,
+    body: { ...baseRequest.body, language },
+  };
   const data = await fetchHuaweiJson<{
     code: number | string;
     value?: unknown;
   }>(request, MAX_CATALOG_UPSTREAM_BYTES);
   if (data.code !== 0 && data.code !== "0")
     throw new Error("Huawei catalog response changed shape");
-  const items = normalizeCatalogItems(data.value);
+  const items = normalizeCatalogItems(data.value, language);
   if (countItems(items) > MAX_CATALOG_ITEMS)
     throw new UpstreamSizeError("Huawei catalog exceeded maximum item count");
-  return { catalogName, language: "en", items };
+  return { catalogName, language, items };
 }
 
-function normalizeCatalogItems(value: unknown): HarmonyCatalogItem[] {
+function normalizeCatalogItems(
+  value: unknown,
+  language: Language,
+): HarmonyCatalogItem[] {
   const source = Array.isArray(value)
     ? value
     : isRecord(value) && Array.isArray(value.catalogTreeList)
@@ -59,7 +66,7 @@ function normalizeCatalogItems(value: unknown): HarmonyCatalogItem[] {
           record.title ??
           record.name ??
           record.label ??
-          "Untitled",
+          LABELS[language].untitled,
       ),
       path:
         typeof record.relateDocument === "string"
@@ -67,7 +74,10 @@ function normalizeCatalogItems(value: unknown): HarmonyCatalogItem[] {
           : typeof record.fileName === "string"
             ? record.fileName
             : undefined,
-      children: normalizeCatalogItems(record.children ?? record.childList),
+      children: normalizeCatalogItems(
+        record.children ?? record.childList,
+        language,
+      ),
     };
   });
 }
@@ -103,10 +113,11 @@ export function renderCatalogMarkdown(
   catalog: HarmonyCatalog,
   maxDepth?: number,
 ): string {
+  const labels = LABELS[catalog.language];
   const title =
     catalog.catalogName === "harmonyos-guides"
-      ? "HarmonyOS Guides Catalog"
-      : "HarmonyOS References Catalog";
+      ? labels.guidesCatalog
+      : labels.referencesCatalog;
   const lines = [`# ${title}`, ""];
   lines.push(...renderTreeItems(catalog.items, 1, maxDepth));
   return lines.join("\n");

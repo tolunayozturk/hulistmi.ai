@@ -37,6 +37,11 @@ describe("HarmonyOS catalog", () => {
 
     const catalog = await fetchHarmonyOSCatalog("harmonyos-guides");
 
+    expect(catalog).toEqual(expect.objectContaining({ language: "en" }));
+    expect(mockedFetchHuaweiJson.mock.calls[0][0].body).toMatchObject({
+      catalogName: "harmonyos-guides",
+      language: "en",
+    });
     expect(catalog.items).toEqual([
       {
         title: "Quick Start",
@@ -50,5 +55,20 @@ describe("HarmonyOS catalog", () => {
         ],
       },
     ]);
+  });
+
+  it("threads language=cn into the upstream body and returns HarmonyCatalog.language=cn", async () => {
+    mockedFetchHuaweiJson.mockResolvedValueOnce({
+      code: 0,
+      value: { catalogTreeList: [] },
+    });
+
+    const catalog = await fetchHarmonyOSCatalog("harmonyos-guides", "cn");
+
+    expect(catalog.language).toBe("cn");
+    expect(mockedFetchHuaweiJson.mock.calls[0][0].body).toMatchObject({
+      catalogName: "harmonyos-guides",
+      language: "cn",
+    });
   });
 });

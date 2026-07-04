@@ -2,10 +2,10 @@
 
 ## HTTP API
 
-- Fetch guide Markdown: `GET /consumer/en/doc/harmonyos-guides/<path>`
-- Fetch reference Markdown: `GET /consumer/en/doc/harmonyos-references/<path>`
-- Search: `GET /search?q=<query>`
-- Catalog: `GET /catalog?catalogName=harmonyos-guides&language=en`
+- Fetch guide Markdown: `GET /consumer/{en|cn}/doc/harmonyos-guides/<path>`
+- Fetch reference Markdown: `GET /consumer/{en|cn}/doc/harmonyos-references/<path>`
+- Search: `GET /search?q=<query>&language=en|cn`
+- Catalog: `GET /catalog?catalogName=harmonyos-guides&language=en|cn`
 
 ## MCP Integration
 

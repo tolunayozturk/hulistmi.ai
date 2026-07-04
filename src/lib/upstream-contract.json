@@ -15,7 +15,6 @@
         "url": "https://svc-drcn.developer.huawei.com/community/servlet/consumer/cn/documentPortal/getCatalogTree",
         "headers": {},
         "body": {
-          "language": "en",
           "catalogName": "harmonyos-guides",
           "showHide": "1"
         }
@@ -27,7 +26,6 @@
         "url": "https://svc-drcn.developer.huawei.com/community/servlet/consumer/cn/documentPortal/getCatalogTree",
         "headers": {},
         "body": {
-          "language": "en",
           "catalogName": "harmonyos-references",
           "showHide": "1"
         }
@@ -42,7 +40,6 @@
         "headers": {},
         "body": {
           "catalogName": "harmonyos-guides",
-          "language": "en",
           "fileName": "start-overview",
           "grayId": "11111111111111111111111111111111"
         }
@@ -53,8 +50,7 @@
         "body": {
           "objectId": "start-overview",
           "nodeAlias": null,
-          "catalogName": "harmonyos-guides",
-          "language": "en"
+          "catalogName": "harmonyos-guides"
         }
       }
     },
@@ -64,7 +60,6 @@
         "headers": {},
         "body": {
           "catalogName": "harmonyos-references",
-          "language": "en",
           "fileName": "js-apis-app-ability-uiability",
           "grayId": "11111111111111111111111111111111"
         }
@@ -75,8 +70,7 @@
         "body": {
           "objectId": "js-apis-app-ability-uiability",
           "nodeAlias": null,
-          "catalogName": "harmonyos-references",
-          "language": "en"
+          "catalogName": "harmonyos-references"
         }
       }
     }
@@ -88,13 +82,12 @@
     "bodyForUIAbility": {
       "deviceId": "ESN",
       "deviceType": "1",
-      "language": "en",
       "country": "CN",
       "requestOrgin": 5,
       "whetherToCorrect": 1,
       "keyWord": "UIAbility",
       "cutPage": { "offset": 0, "length": 20 },
-      "developerVertical": { "categoryList": [1], "language": "en" }
+      "developerVertical": { "categoryList": [1] }
     },
     "maxQueryLength": 120,
     "defaultLength": 20,

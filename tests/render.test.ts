@@ -39,16 +39,47 @@ describe("HarmonyOS Markdown rendering", () => {
     expect(markdown.match(/Video playback/g)).toHaveLength(1);
   });
 
-  it("adds source metadata and footer", () => {
+  it("adds source metadata and footer (en default)", () => {
     const markdown = renderDocumentMarkdown(
       { status: "4", title: "Start", content: { content: "<p>Body</p>" } },
       "harmonyos-guides/start-overview",
       "HarmonyOS Guides",
     );
     expect(markdown).toContain("title: Start");
+    expect(markdown).toContain("language: en");
     expect(markdown).toContain(
       "source: https://developer.huawei.com/consumer/en/doc/harmonyos-guides/start-overview",
     );
     expect(markdown).toContain("Extracted by [hulistmi.ai]");
+  });
+
+  it("emits cn frontmatter and cn source URL when language=cn", () => {
+    const markdown = renderDocumentMarkdown(
+      { status: "4", title: "Start", content: { content: "<p>Body</p>" } },
+      "harmonyos-guides/start-overview",
+      "HarmonyOS 指南",
+      "cn",
+    );
+    expect(markdown).toContain("language: cn");
+    expect(markdown).toContain(
+      "source: https://developer.huawei.com/consumer/cn/doc/harmonyos-guides/start-overview",
+    );
+    expect(markdown).toContain("category: HarmonyOS 指南");
+  });
+
+  it("falls back to localized Untitled when title is missing", () => {
+    const en = renderDocumentMarkdown(
+      { status: "4", title: "", content: { content: "<p>x</p>" } },
+      "harmonyos-guides/x",
+      "HarmonyOS Guides",
+    );
+    expect(en).toContain("title: Untitled");
+    const cn = renderDocumentMarkdown(
+      { status: "4", title: "", content: { content: "<p>x</p>" } },
+      "harmonyos-guides/x",
+      "HarmonyOS 指南",
+      "cn",
+    );
+    expect(cn).toContain("title: 未命名");
   });
 });

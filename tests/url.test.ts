@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   generateHuaweiDocUrl,
+  huaweiUrlLanguage,
   huaweiUrlToPath,
   isValidHuaweiDocUrl,
   normalizeDocsPath,
@@ -20,14 +21,34 @@ describe("HarmonyOS URL utilities", () => {
     });
   });
 
-  it("maps Huawei docs URLs to service paths", () => {
+  it("maps Huawei docs URLs to service paths (en)", () => {
     const source =
       "https://developer.huawei.com/consumer/en/doc/harmonyos-guides/start-overview";
     expect(isValidHuaweiDocUrl(source)).toBe(true);
     expect(huaweiUrlToPath(source)).toBe("harmonyos-guides/start-overview");
+    expect(huaweiUrlLanguage(source)).toBe("en");
     expect(generateHuaweiDocUrl("harmonyos-guides/start-overview")).toBe(
       source,
     );
+  });
+
+  it("maps Huawei docs URLs to service paths (cn)", () => {
+    const source =
+      "https://developer.huawei.com/consumer/cn/doc/harmonyos-guides/start-overview";
+    expect(isValidHuaweiDocUrl(source)).toBe(true);
+    expect(huaweiUrlToPath(source)).toBe("harmonyos-guides/start-overview");
+    expect(huaweiUrlLanguage(source)).toBe("cn");
+    expect(
+      huaweiUrlLanguage(
+        "https://developer.huawei.com/consumer/en/doc/harmonyos-guides/start-overview",
+      ),
+    ).toBe("en");
+    expect(generateHuaweiDocUrl("harmonyos-guides/start-overview", "cn")).toBe(
+      source,
+    );
+    expect(
+      isValidHuaweiDocUrl("https://developer.huawei.com/consumer/zh/doc/x"),
+    ).toBe(false);
   });
 
   it("maps local Huawei-style docs paths to service paths", () => {
@@ -36,5 +57,15 @@ describe("HarmonyOS URL utilities", () => {
         "http://localhost:8787/consumer/en/doc/harmonyos-guides/pipwindow-overview",
       ),
     ).toBe("harmonyos-guides/pipwindow-overview");
+    expect(
+      huaweiUrlToPath(
+        "http://localhost:8787/consumer/cn/doc/harmonyos-guides/pipwindow-overview",
+      ),
+    ).toBe("harmonyos-guides/pipwindow-overview");
+    expect(
+      huaweiUrlLanguage(
+        "http://localhost:8787/consumer/cn/doc/harmonyos-guides/pipwindow-overview",
+      ),
+    ).toBe("cn");
   });
 });

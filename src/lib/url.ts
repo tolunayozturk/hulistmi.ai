@@ -1,12 +1,27 @@
+import { DEFAULT_LANGUAGE, docPrefix, type Language } from "./language";
+
 const HUAWEI_DOC_ORIGIN = "https://developer.huawei.com";
-const DOC_PREFIX = "/consumer/en/doc/";
 
 export function normalizeDocsPath(path: string): string {
   return path.trim().replace(/^\/+/, "").replace(/\/+$/, "");
 }
 
-export function generateHuaweiDocUrl(path: string): string {
-  return `${HUAWEI_DOC_ORIGIN}${DOC_PREFIX}${normalizeDocsPath(path)}`;
+function matchDocPrefix(
+  input: string,
+): { lang: Language; rest: string } | null {
+  for (const lang of ["en", "cn"] as const) {
+    const prefix = docPrefix(lang);
+    if (input.startsWith(prefix))
+      return { lang, rest: input.slice(prefix.length) };
+  }
+  return null;
+}
+
+export function generateHuaweiDocUrl(
+  path: string,
+  language: Language = DEFAULT_LANGUAGE,
+): string {
+  return `${HUAWEI_DOC_ORIGIN}${docPrefix(language)}${normalizeDocsPath(path)}`;
 }
 
 export function isValidHuaweiDocUrl(input: string): boolean {
@@ -15,7 +30,7 @@ export function isValidHuaweiDocUrl(input: string): boolean {
     return (
       url.protocol === "https:" &&
       url.hostname === "developer.huawei.com" &&
-      url.pathname.startsWith(DOC_PREFIX)
+      matchDocPrefix(url.pathname) !== null
     );
   } catch {
     return false;
@@ -24,9 +39,16 @@ export function isValidHuaweiDocUrl(input: string): boolean {
 
 export function huaweiUrlToPath(input: string): string {
   const url = new URL(input);
-  if (!url.pathname.startsWith(DOC_PREFIX))
-    throw new Error(`Unsupported Huawei documentation URL: ${input}`);
-  return normalizeDocsPath(url.pathname.slice(DOC_PREFIX.length));
+  const match = matchDocPrefix(url.pathname);
+  if (!match) throw new Error(`Unsupported Huawei documentation URL: ${input}`);
+  return normalizeDocsPath(match.rest);
+}
+
+export function huaweiUrlLanguage(input: string): Language {
+  const url = new URL(input);
+  const match = matchDocPrefix(url.pathname);
+  if (!match) throw new Error(`Unsupported Huawei documentation URL: ${input}`);
+  return match.lang;
 }
 
 export function splitDocsPath(path: string): {

@@ -3,12 +3,14 @@ import { z } from "zod";
 import { fetchHarmonyOSCatalog, renderCatalogMarkdown } from "./catalog";
 import { assertRenderedMarkdownWithinLimit } from "./fetch";
 import { fetchGuidePageData, renderGuideMarkdown } from "./guides";
+import { DEFAULT_LANGUAGE } from "./language";
 import { fetchReferencePageData, renderReferenceMarkdown } from "./reference";
 import { renderSearchMarkdown, searchHarmonyOSDocs } from "./search";
+import { VERSION } from "./version";
 
 export const MCP_SERVER_INFO = {
   name: "hulistmi.ai",
-  version: "1.0.2",
+  version: VERSION,
 } as const;
 
 const readOnlyAnnotations = {
@@ -18,17 +20,40 @@ const readOnlyAnnotations = {
   openWorldHint: true,
 } as const;
 
+const languageSchema = z.enum(["en", "cn"]).default(DEFAULT_LANGUAGE);
+
+export const SEARCH_INPUT_SCHEMA = {
+  query: z.string().min(1).max(120),
+  language: languageSchema,
+};
+
+export const FETCH_DOC_INPUT_SCHEMA = {
+  path: z.string().min(1),
+  language: languageSchema,
+};
+
+export const FETCH_CATALOG_INPUT_SCHEMA = {
+  catalogName: z
+    .enum(["harmonyos-guides", "harmonyos-references"])
+    .default("harmonyos-guides"),
+  language: languageSchema,
+  depth: z.number().int().min(1).optional(),
+};
+
 export const TOOL_DEFINITIONS = {
   searchHarmonyOSDocumentation: {
-    description: "Search HarmonyOS developer documentation.",
-    http: { path: "/search", query: { q: "query" } },
+    description:
+      "Search HarmonyOS developer documentation. Pass language=cn for Chinese-language results.",
+    http: { path: "/search", query: { q: "query", language: "language" } },
   },
   fetchHarmonyOSDocumentation: {
-    description: "Fetch a HarmonyOS documentation page as Markdown.",
+    description:
+      "Fetch a HarmonyOS documentation page as Markdown. Pass language=cn to fetch the Chinese version.",
     http: { path: "/{path}", query: {} },
   },
   fetchHarmonyOSCatalog: {
-    description: "Fetch a HarmonyOS documentation catalog.",
+    description:
+      "Fetch a HarmonyOS documentation catalog. Pass language=cn for the Chinese catalog.",
     http: {
       path: "/catalog",
       query: {
@@ -47,15 +72,15 @@ export function createMcpServer(): McpServer {
     {
       title: "Search HarmonyOS Documentation",
       description: TOOL_DEFINITIONS.searchHarmonyOSDocumentation.description,
-      inputSchema: { query: z.string().min(1).max(120) },
+      inputSchema: SEARCH_INPUT_SCHEMA,
       annotations: readOnlyAnnotations,
     },
-    async ({ query }) => ({
+    async ({ query, language }) => ({
       content: [
         {
           type: "text",
           text: assertRenderedMarkdownWithinLimit(
-            renderSearchMarkdown(await searchHarmonyOSDocs(query)),
+            renderSearchMarkdown(await searchHarmonyOSDocs(query, language)),
           ),
         },
       ],
@@ -66,23 +91,27 @@ export function createMcpServer(): McpServer {
     {
       title: "Fetch HarmonyOS Documentation",
       description: TOOL_DEFINITIONS.fetchHarmonyOSDocumentation.description,
-      inputSchema: { path: z.string().min(1) },
+      inputSchema: FETCH_DOC_INPUT_SCHEMA,
       annotations: readOnlyAnnotations,
     },
-    async ({ path }) => {
+    async ({ path, language }) => {
       const normalized = path.replace(/^\/+/, "");
       const content = normalized.startsWith("harmonyos-references/")
         ? renderReferenceMarkdown(
             await fetchReferencePageData(
               normalized.replace("harmonyos-references/", ""),
+              language,
             ),
             normalized.replace("harmonyos-references/", ""),
+            language,
           )
         : renderGuideMarkdown(
             await fetchGuidePageData(
               normalized.replace("harmonyos-guides/", ""),
+              language,
             ),
             normalized.replace("harmonyos-guides/", ""),
+            language,
           );
       return {
         content: [
@@ -96,13 +125,7 @@ export function createMcpServer(): McpServer {
     {
       title: "Fetch HarmonyOS Catalog",
       description: TOOL_DEFINITIONS.fetchHarmonyOSCatalog.description,
-      inputSchema: {
-        catalogName: z
-          .enum(["harmonyos-guides", "harmonyos-references"])
-          .default("harmonyos-guides"),
-        language: z.literal("en").default("en"),
-        depth: z.number().int().min(1).optional(),
-      },
+      inputSchema: FETCH_CATALOG_INPUT_SCHEMA,
       annotations: readOnlyAnnotations,
     },
     async ({ catalogName, language, depth }) => ({

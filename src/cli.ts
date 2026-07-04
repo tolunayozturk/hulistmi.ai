@@ -11,7 +11,7 @@ import { splitDocsPath } from "./lib/url";
 export async function main(argv = process.argv.slice(2)): Promise<void> {
   const args = parseCliArgs(argv);
   if (args.command === "search") {
-    const result = await searchHarmonyOSDocs(args.query);
+    const result = await searchHarmonyOSDocs(args.query, args.language);
     const output = args.json
       ? JSON.stringify(result, null, 2)
       : renderSearchMarkdown(result);
@@ -19,24 +19,19 @@ export async function main(argv = process.argv.slice(2)): Promise<void> {
     return;
   }
   if (args.command === "fetch") {
-    const endpoint = resolveFetchEndpoint(args.input);
-    const DOC_PREFIX = "/consumer/en/doc/";
-    if (!endpoint.startsWith(DOC_PREFIX))
-      throw new Error(`Unsupported fetch endpoint: ${endpoint}`);
-    const { catalogName, pagePath } = splitDocsPath(
-      endpoint.slice(DOC_PREFIX.length),
-    );
-    const sourceUrl = `https://developer.huawei.com/consumer/en/doc/${catalogName}/${pagePath}`;
+    const { path, language } = resolveFetchEndpoint(args.input);
+    const { catalogName, pagePath } = splitDocsPath(path);
+    const sourceUrl = `https://developer.huawei.com/consumer/${language}/doc/${catalogName}/${pagePath}`;
     if (catalogName === "harmonyos-guides") {
-      const data = await fetchGuidePageData(pagePath);
-      const content = renderGuideMarkdown(data, pagePath);
+      const data = await fetchGuidePageData(pagePath, language);
+      const content = renderGuideMarkdown(data, pagePath, language);
       const output = args.json
         ? JSON.stringify({ url: sourceUrl, content }, null, 2)
         : content;
       process.stdout.write(`${output}\n`);
     } else {
-      const data = await fetchReferencePageData(pagePath);
-      const content = renderReferenceMarkdown(data, pagePath);
+      const data = await fetchReferencePageData(pagePath, language);
+      const content = renderReferenceMarkdown(data, pagePath, language);
       const output = args.json
         ? JSON.stringify({ url: sourceUrl, content }, null, 2)
         : content;

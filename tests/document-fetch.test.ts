@@ -118,10 +118,110 @@ describe("HarmonyOS document fetch", () => {
       isApi: 0,
       fileName: "window-rotation",
     });
+  });
+
+  it("stamps language=cn on the canary contract-file entry (harmonyos-guides/start-overview)", async () => {
+    mockedFetchHuaweiJson
+      .mockResolvedValueOnce({
+        code: 0,
+        message: "success",
+        value: { isGrayUser: 0 },
+      })
+      .mockResolvedValueOnce({
+        code: 0,
+        message: "success",
+        value: {
+          status: "4",
+          title: "Preparations for Development",
+          content: { content: "<p>Build a HarmonyOS app.</p>" },
+        },
+      });
+
+    await fetchGuidePageData("start-overview", "cn");
+
+    expect(mockedFetchHuaweiJson.mock.calls[0][0].body).toMatchObject({
+      catalogName: "harmonyos-guides",
+      fileName: "start-overview",
+      language: "cn",
+    });
+    expect(mockedFetchHuaweiJson.mock.calls[1][0].body).toMatchObject({
+      objectId: "start-overview",
+      catalogName: "harmonyos-guides",
+      language: "cn",
+    });
+  });
+
+  it("stamps language=cn on built entries that bypass the contract file", async () => {
+    mockedFetchHuaweiJson
+      .mockResolvedValueOnce({
+        code: 0,
+        message: "success",
+        value: { isGrayUser: 0 },
+      })
+      .mockResolvedValueOnce({
+        code: 0,
+        message: "success",
+        value: {
+          status: "4",
+          title: "Window Rotation",
+          content: { content: "<p>Rotate the window.</p>" },
+        },
+      });
+
+    await fetchGuidePageData("window-rotation", "cn");
+
+    expect(mockedFetchHuaweiJson.mock.calls[0][0].body).toMatchObject({
+      catalogName: "harmonyos-guides",
+      fileName: "window-rotation",
+      language: "cn",
+    });
+    expect(mockedFetchHuaweiJson.mock.calls[1][0].body).toMatchObject({
+      objectId: "window-rotation",
+      catalogName: "harmonyos-guides",
+      language: "cn",
+    });
+  });
+
+  it("stamps language=cn on the center-document branch bodies", async () => {
+    mockedFetchHuaweiJson
+      .mockResolvedValueOnce({
+        code: 0,
+        message: "success",
+        value: {
+          isGrayUser: 1,
+          centerPrefix: "hmos",
+          level2NodeAlias: "hmos-ui",
+          isApi: 0,
+          filename: "window-rotation",
+        },
+      })
+      .mockResolvedValueOnce({
+        code: 0,
+        message: "success",
+        value: { catalogTreeList: [] },
+      })
+      .mockResolvedValueOnce({
+        code: 0,
+        message: "success",
+        value: {
+          status: "4",
+          title: "Window Rotation",
+          content: { content: "<p>Rotate the window.</p>" },
+        },
+      });
+
+    await fetchGuidePageData("window-rotation", "cn");
+
+    expect(mockedFetchHuaweiJson.mock.calls[1][0].body).toMatchObject({
+      centerPrefix: "hmos",
+      level2NodeAlias: "hmos-ui",
+      language: "cn",
+      fileName: "window-rotation",
+    });
     expect(mockedFetchHuaweiJson.mock.calls[2][0].body).toMatchObject({
       centerPrefix: "hmos",
       level2NodeAlias: "hmos-ui",
-      isApi: 0,
+      language: "cn",
       fileName: "window-rotation",
     });
   });
