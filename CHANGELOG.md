@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.1.1
+
+### Patch Changes
+
+- Replace regex-based error message echo with typed `ValidationError` class for safer error handling
+
 ## 1.1.0
 
 ### Minor Changes

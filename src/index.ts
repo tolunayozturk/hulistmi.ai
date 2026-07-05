@@ -249,11 +249,6 @@ app.onError((err, c) => {
     );
   if (err instanceof UpstreamSizeError)
     return c.json({ error: "Upstream content is too large" }, 502);
-  if (
-    err instanceof Error &&
-    /invalid|unsupported|required|too long/i.test(err.message)
-  )
-    return c.json({ error: err.message }, 400);
   return c.json({ error: "Unable to render HarmonyOS documentation" }, 502);
 });
 

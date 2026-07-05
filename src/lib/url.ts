@@ -1,4 +1,5 @@
 import { type CatalogName, SUPPORTED_CATALOGS } from "./catalog-name";
+import { ValidationError } from "./fetch";
 import { DEFAULT_LANGUAGE, docPrefix, type Language } from "./language";
 
 export const HUAWEI_DOC_ORIGIN = "https://developer.huawei.com";
@@ -52,14 +53,16 @@ export function isValidHuaweiDocUrl(input: string): boolean {
 export function huaweiUrlToPath(input: string): string {
   const url = new URL(input);
   const match = matchDocPrefix(url.pathname);
-  if (!match) throw new Error(`Unsupported Huawei documentation URL: ${input}`);
+  if (!match)
+    throw new ValidationError(`Unsupported Huawei documentation URL: ${input}`);
   return normalizeDocsPath(match.rest);
 }
 
 export function huaweiUrlLanguage(input: string): Language {
   const url = new URL(input);
   const match = matchDocPrefix(url.pathname);
-  if (!match) throw new Error(`Unsupported Huawei documentation URL: ${input}`);
+  if (!match)
+    throw new ValidationError(`Unsupported Huawei documentation URL: ${input}`);
   return match.lang;
 }
 
@@ -77,5 +80,7 @@ export function splitDocsPath(path: string): {
       };
     }
   }
-  throw new Error(`Unsupported HarmonyOS documentation path: ${path}`);
+  throw new ValidationError(
+    `Unsupported HarmonyOS documentation path: ${path}`,
+  );
 }

@@ -6,6 +6,7 @@ export class NotFoundError extends Error {}
 export class UpstreamPolicyError extends Error {}
 export class UpstreamSizeError extends Error {}
 export class UpstreamTimeoutError extends Error {}
+export class ValidationError extends Error {}
 
 export const HULISTMI_USER_AGENT = `hulistmi-ai/${VERSION} (+${PUBLIC_ORIGIN}/bot)`;
 export const UPSTREAM_TIMEOUT_MS = 10_000;

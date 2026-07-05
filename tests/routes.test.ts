@@ -23,6 +23,7 @@ vi.mock("../src/lib/fetch", () => ({
   UpstreamPolicyError: class UpstreamPolicyError extends Error {},
   UpstreamSizeError: class UpstreamSizeError extends Error {},
   UpstreamTimeoutError: class UpstreamTimeoutError extends Error {},
+  ValidationError: class ValidationError extends Error {},
   MAX_MCP_REQUEST_BYTES: 131_072,
   MAX_RENDERED_MARKDOWN_BYTES: 524_288,
   MAX_UPSTREAM_RESPONSE_BYTES: 1_048_576,

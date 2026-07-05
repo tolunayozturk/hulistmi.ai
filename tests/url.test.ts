@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { ValidationError } from "../src/lib/fetch";
 import {
   generateHuaweiDocUrl,
   huaweiUrlLanguage,
@@ -130,5 +131,9 @@ describe("splitDocsPath across all supported catalogs", () => {
     expect(() => splitDocsPath("bogus-catalog/foo")).toThrow(
       /Unsupported HarmonyOS documentation path/,
     );
+  });
+
+  it("throws ValidationError (not generic Error) for unsupported paths", () => {
+    expect(() => splitDocsPath("bogus-catalog/foo")).toThrow(ValidationError);
   });
 });

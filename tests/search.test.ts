@@ -24,6 +24,7 @@ const searchMock = vi.fn(async () => ({
 
 vi.mock("../src/lib/fetch", () => ({
   fetchHuaweiJson: (...args: unknown[]) => searchMock(...args),
+  ValidationError: class ValidationError extends Error {},
 }));
 
 describe("HarmonyOS search", () => {

@@ -1,3 +1,4 @@
+import { ValidationError } from "./fetch";
 import type { Language } from "./language";
 import { huaweiUrlLanguage, huaweiUrlToPath, normalizeDocsPath } from "./url";
 
@@ -20,7 +21,7 @@ export interface ResolvedFetchEndpoint {
 
 export function resolveFetchEndpoint(input: string): ResolvedFetchEndpoint {
   const trimmed = input.trim();
-  if (!trimmed) throw new Error("Fetch input cannot be empty");
+  if (!trimmed) throw new ValidationError("Fetch input cannot be empty");
   let path: string;
   let language: Language;
   if (/^https?:\/\//i.test(trimmed)) {
@@ -30,7 +31,7 @@ export function resolveFetchEndpoint(input: string): ResolvedFetchEndpoint {
     const stripped = normalizeDocsPath(trimmed);
     const prefix = SUPPORTED_LANG_PREFIXES.find((p) => stripped.startsWith(p));
     if (!prefix)
-      throw new Error(
+      throw new ValidationError(
         `Input must be a full Huawei doc URL or /consumer/{en|cn}/doc/<catalog>/<path> — got: ${input}`,
       );
     path = stripped.slice(prefix.length);
@@ -44,7 +45,7 @@ export function resolveSearchEndpoint(
   language: Language,
 ): string {
   const trimmed = query.trim();
-  if (!trimmed) throw new Error("Search query cannot be empty");
+  if (!trimmed) throw new ValidationError("Search query cannot be empty");
   return `/search?q=${encodeURIComponent(trimmed)}&language=${language}`;
 }
 
@@ -56,7 +57,9 @@ const VALUE_FLAG_NAMES = new Set(VALUE_FLAGS.keys());
 
 function parseLanguageValue(raw: string): Language {
   if (raw !== "en" && raw !== "cn")
-    throw new Error(`Unsupported language: ${raw} (must be "en" or "cn")`);
+    throw new ValidationError(
+      `Unsupported language: ${raw} (must be "en" or "cn")`,
+    );
   return raw;
 }
 
@@ -70,7 +73,7 @@ export function parseCliArgs(argv: string[]): CliCommand {
   function takeValueFlag(flag: string, index: number): number {
     const next = jsonStripped[index + 1];
     if (next === undefined || next.startsWith("-"))
-      throw new Error(`Flag ${flag} requires a value`);
+      throw new ValidationError(`Flag ${flag} requires a value`);
     if (language !== undefined)
       process.stderr.write(
         `warning: ${flag} ${next} overrides earlier --language/-l\n`,
@@ -91,7 +94,8 @@ export function parseCliArgs(argv: string[]): CliCommand {
       const name = token.slice(0, equalIdx);
       if (VALUE_FLAG_NAMES.has(name)) {
         const value = token.slice(equalIdx + 1);
-        if (value === "") throw new Error(`Flag ${name}= requires a value`);
+        if (value === "")
+          throw new ValidationError(`Flag ${name}= requires a value`);
         if (language !== undefined)
           process.stderr.write(
             `warning: ${name}=${value} overrides earlier --language/-l\n`,
@@ -107,9 +111,10 @@ export function parseCliArgs(argv: string[]): CliCommand {
 
   if (command === "fetch") {
     const input = remaining[0];
-    if (!input) throw new Error("Usage: hulistmi fetch <url-or-path> [--json]");
+    if (!input)
+      throw new ValidationError("Usage: hulistmi fetch <url-or-path> [--json]");
     if (language !== undefined)
-      throw new Error(
+      throw new ValidationError(
         "The --language/-l flag is not supported for `fetch`; language is derived from the URL prefix.",
       );
     const { language: derived } = resolveFetchEndpoint(input);
@@ -122,7 +127,8 @@ export function parseCliArgs(argv: string[]): CliCommand {
   }
   if (command === "search") {
     const query = remaining.join(" ");
-    if (!query) throw new Error("Usage: hulistmi search <query> [--json]");
+    if (!query)
+      throw new ValidationError("Usage: hulistmi search <query> [--json]");
     return { command, query, language: language ?? "en", json };
   }
   if (command === "serve") {
@@ -130,7 +136,7 @@ export function parseCliArgs(argv: string[]): CliCommand {
     const port = portFlag >= 0 ? Number(remaining[portFlag + 1]) : undefined;
     return { command, port };
   }
-  throw new Error(
+  throw new ValidationError(
     "Usage: hulistmi fetch <url-or-path> [--json] | hulistmi search <query> [--language en|cn] [--json] | hulistmi serve [--port 8787]",
   );
 }
