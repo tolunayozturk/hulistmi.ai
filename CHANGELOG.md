@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.1.2
+
+### Patch Changes
+
+- [`985da1f`](https://github.com/tolunayozturk/hulistmi.ai/commit/985da1fba6b1ecaef21525a89f2e0ad09e4724c3) Thanks [@tolunayozturk](https://github.com/tolunayozturk)! - rendering improvements: fenced code blocks with language detection, bold/emphasis/superscript/subscript, image rendering with fallback alt text, [hX] heading artifact stripping, duplicate h1 removal, and list item code block support
+
 ## 1.1.1
 
 ### Patch Changes
