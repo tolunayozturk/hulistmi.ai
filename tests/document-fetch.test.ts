@@ -5,6 +5,9 @@ import { fetchGuidePageData } from "../src/lib/guides";
 vi.mock("../src/lib/fetch", () => ({
   fetchHuaweiJson: vi.fn(),
   NotFoundError: class NotFoundError extends Error {},
+  UpstreamSizeError: class UpstreamSizeError extends Error {},
+  UpstreamTimeoutError: class UpstreamTimeoutError extends Error {},
+  UpstreamPolicyError: class UpstreamPolicyError extends Error {},
 }));
 
 const mockedFetchHuaweiJson = vi.mocked(fetchHuaweiJson);

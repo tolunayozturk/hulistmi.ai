@@ -76,6 +76,32 @@ describe("Hono app routing", () => {
     );
     expect(res.status).toBe(400);
   });
+
+  it("serves /consumer/en/doc/harmonyos-releases/overview-allversion with Content-Location preserving catalog name", async () => {
+    const res = await SELF.fetch(
+      new Request(
+        "https://hulistmi.ai/consumer/en/doc/harmonyos-releases/overview-allversion",
+      ),
+    );
+    expect(res.status).toBe(200);
+    expect(res.headers.get("Content-Location")).toBe(
+      "https://developer.huawei.com/consumer/en/doc/harmonyos-releases/overview-allversion",
+    );
+  });
+
+  it("lock the byte-identical Content-Location for the pre-existing guides catalog (regression guard)", async () => {
+    const res = await SELF.fetch(
+      new Request(
+        "https://hulistmi.ai/consumer/en/doc/harmonyos-guides/start-overview",
+      ),
+    );
+    expect(res.headers.get("Content-Location")).toBe(
+      "https://developer.huawei.com/consumer/en/doc/harmonyos-guides/start-overview",
+    );
+    expect(res.headers.get("Content-Type")).toBe(
+      "text/markdown; charset=utf-8",
+    );
+  });
 });
 
 describe("GET /bot", () => {
@@ -90,6 +116,10 @@ describe("GET /bot", () => {
 });
 
 describe("GET /search query-length guarding at HTTP layer", () => {
+  beforeEach(() => {
+    fetchHuaweiJsonMock.mockClear();
+  });
+
   it("rejects an overlong query with 400 before invoking upstream", async () => {
     const res = await SELF.fetch(
       new Request(`https://hulistmi.ai/search?q=${"x".repeat(121)}`),

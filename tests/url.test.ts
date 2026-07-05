@@ -86,3 +86,49 @@ describe("generateHuaweiDocUrl with explicit catalogName", () => {
     );
   });
 });
+
+describe("splitDocsPath across all supported catalogs", () => {
+  it("splits each of the 5 supported catalog prefixes", () => {
+    expect(splitDocsPath("harmonyos-releases/overview-allversion")).toEqual({
+      catalogName: "harmonyos-releases",
+      pagePath: "overview-allversion",
+    });
+    expect(
+      splitDocsPath("design-guides/design-concepts-0000001795698445"),
+    ).toEqual({
+      catalogName: "design-guides",
+      pagePath: "design-concepts-0000001795698445",
+    });
+    expect(
+      splitDocsPath("best-practices/bpta-app-architecture-overview"),
+    ).toEqual({
+      catalogName: "best-practices",
+      pagePath: "bpta-app-architecture-overview",
+    });
+  });
+
+  it("distinguishes harmonyos-references/ from harmonyos-releases/", () => {
+    expect(
+      splitDocsPath("harmonyos-references/js-apis-app-ability-uiability")
+        .catalogName,
+    ).toBe("harmonyos-references");
+    expect(
+      splitDocsPath("harmonyos-releases/overview-allversion").catalogName,
+    ).toBe("harmonyos-releases");
+  });
+
+  it("rejects an unsupported catalog that shares a prefix with a removed catalog", () => {
+    expect(() => splitDocsPath("harmonyos-codelabs/foo")).toThrow(
+      /Unsupported HarmonyOS documentation path/,
+    );
+    expect(() => splitDocsPath("harmonyos-samples/foo")).toThrow(
+      /Unsupported HarmonyOS documentation path/,
+    );
+  });
+
+  it("rejects an unknown catalog", () => {
+    expect(() => splitDocsPath("bogus-catalog/foo")).toThrow(
+      /Unsupported HarmonyOS documentation path/,
+    );
+  });
+});

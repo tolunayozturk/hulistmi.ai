@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
+import { SUPPORTED_CATALOGS } from "../src/lib/catalog-name";
 import {
   FETCH_CATALOG_INPUT_SCHEMA,
   FETCH_DOC_INPUT_SCHEMA,
@@ -53,5 +54,35 @@ describe("MCP tool metadata", () => {
         catalogName: "harmonyos-guides",
       }),
     ).toMatchObject({ language: "en" });
+  });
+
+  it("fetchHarmonyOSCatalog catalogName enum accepts every supported catalog", () => {
+    for (const catalogName of SUPPORTED_CATALOGS) {
+      expect(
+        z.object(FETCH_CATALOG_INPUT_SCHEMA).parse({ catalogName }),
+      ).toMatchObject({ catalogName, language: "en" });
+    }
+  });
+
+  it("fetchHarmonyOSCatalog catalogName enum rejects an unknown catalog", () => {
+    expect(() =>
+      z.object(FETCH_CATALOG_INPUT_SCHEMA).parse({ catalogName: "bogus" }),
+    ).toThrow();
+  });
+
+  it("fetchHarmonyOSCatalog catalogName enum defaults to harmonyos-guides", () => {
+    expect(z.object(FETCH_CATALOG_INPUT_SCHEMA).parse({})).toMatchObject({
+      catalogName: "harmonyos-guides",
+    });
+  });
+
+  it("fetchHarmonyOSDocumentation path accepts any of the 5 catalog prefixes", () => {
+    for (const catalogName of SUPPORTED_CATALOGS) {
+      const path = `${catalogName}/some-slug`;
+      expect(z.object(FETCH_DOC_INPUT_SCHEMA).parse({ path })).toMatchObject({
+        path,
+        language: "en",
+      });
+    }
   });
 });

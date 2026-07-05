@@ -1,3 +1,4 @@
+import { type CatalogName, SUPPORTED_CATALOGS } from "./catalog-name";
 import { DEFAULT_LANGUAGE, docPrefix, type Language } from "./language";
 
 export const HUAWEI_DOC_ORIGIN = "https://developer.huawei.com";
@@ -63,21 +64,18 @@ export function huaweiUrlLanguage(input: string): Language {
 }
 
 export function splitDocsPath(path: string): {
-  catalogName: "harmonyos-guides" | "harmonyos-references";
+  catalogName: CatalogName;
   pagePath: string;
 } {
   const normalized = normalizeDocsPath(path);
-  if (normalized.startsWith("harmonyos-guides/")) {
-    return {
-      catalogName: "harmonyos-guides",
-      pagePath: normalized.slice("harmonyos-guides/".length),
-    };
-  }
-  if (normalized.startsWith("harmonyos-references/")) {
-    return {
-      catalogName: "harmonyos-references",
-      pagePath: normalized.slice("harmonyos-references/".length),
-    };
+  for (const catalogName of SUPPORTED_CATALOGS) {
+    const prefix = `${catalogName}/`;
+    if (normalized.startsWith(prefix)) {
+      return {
+        catalogName,
+        pagePath: normalized.slice(prefix.length),
+      };
+    }
   }
   throw new Error(`Unsupported HarmonyOS documentation path: ${path}`);
 }

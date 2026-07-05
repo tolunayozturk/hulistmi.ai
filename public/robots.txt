@@ -2,7 +2,13 @@ User-agent: *
 Allow: /
 Disallow: /consumer/en/doc/harmonyos-guides/
 Disallow: /consumer/en/doc/harmonyos-references/
+Disallow: /consumer/en/doc/harmonyos-releases/
+Disallow: /consumer/en/doc/design-guides/
+Disallow: /consumer/en/doc/best-practices/
 Disallow: /consumer/cn/doc/harmonyos-guides/
 Disallow: /consumer/cn/doc/harmonyos-references/
+Disallow: /consumer/cn/doc/harmonyos-releases/
+Disallow: /consumer/cn/doc/design-guides/
+Disallow: /consumer/cn/doc/best-practices/
 Disallow: /catalog
 Disallow: /search

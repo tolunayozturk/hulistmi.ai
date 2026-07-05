@@ -4,8 +4,11 @@
 
 - Fetch guide Markdown: `GET /consumer/{en|cn}/doc/harmonyos-guides/<path>`
 - Fetch reference Markdown: `GET /consumer/{en|cn}/doc/harmonyos-references/<path>`
+- Fetch release notes Markdown: `GET /consumer/{en|cn}/doc/harmonyos-releases/<path>`
+- Fetch design Markdown: `GET /consumer/{en|cn}/doc/design-guides/<path>`
+- Fetch best-practices Markdown: `GET /consumer/{en|cn}/doc/best-practices/<path>`
 - Search: `GET /search?q=<query>&language=en|cn`
-- Catalog: `GET /catalog?catalogName=harmonyos-guides&language=en|cn`
+- Catalog: `GET /catalog?catalogName=<name>&language=en|cn` (any of: harmonyos-guides, harmonyos-references, harmonyos-releases, design-guides, best-practices)
 
 ## MCP Integration
 

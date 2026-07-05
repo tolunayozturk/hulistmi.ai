@@ -1,12 +1,13 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { fetchHarmonyOSCatalog, renderCatalogMarkdown } from "./catalog";
+import { SUPPORTED_CATALOGS } from "./catalog-name";
 import { assertRenderedMarkdownWithinLimit } from "./fetch";
-import { fetchGuidePageData, renderGuideMarkdown } from "./guides";
+import { fetchAndRenderCatalogPage } from "./generic";
 import { DEFAULT_LANGUAGE } from "./language";
-import { fetchReferencePageData, renderReferenceMarkdown } from "./reference";
 import { renderSearchMarkdown, searchHarmonyOSDocs } from "./search";
 import { UPSTREAM_CONTRACT } from "./upstream-contract";
+import { splitDocsPath } from "./url";
 import { VERSION } from "./version";
 
 export const MCP_SERVER_INFO = {
@@ -35,7 +36,7 @@ export const FETCH_DOC_INPUT_SCHEMA = {
 
 export const FETCH_CATALOG_INPUT_SCHEMA = {
   catalogName: z
-    .enum(["harmonyos-guides", "harmonyos-references"])
+    .enum([...SUPPORTED_CATALOGS] as [string, ...string[]])
     .default("harmonyos-guides"),
   language: languageSchema,
   depth: z.number().int().min(1).optional(),
@@ -97,23 +98,12 @@ export function createMcpServer(): McpServer {
     },
     async ({ path, language }) => {
       const normalized = path.replace(/^\/+/, "");
-      const content = normalized.startsWith("harmonyos-references/")
-        ? renderReferenceMarkdown(
-            await fetchReferencePageData(
-              normalized.replace("harmonyos-references/", ""),
-              language,
-            ),
-            normalized.replace("harmonyos-references/", ""),
-            language,
-          )
-        : renderGuideMarkdown(
-            await fetchGuidePageData(
-              normalized.replace("harmonyos-guides/", ""),
-              language,
-            ),
-            normalized.replace("harmonyos-guides/", ""),
-            language,
-          );
+      const { catalogName, pagePath } = splitDocsPath(normalized);
+      const { content } = await fetchAndRenderCatalogPage(
+        catalogName,
+        pagePath,
+        language,
+      );
       return {
         content: [
           { type: "text", text: assertRenderedMarkdownWithinLimit(content) },

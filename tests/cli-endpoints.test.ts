@@ -55,6 +55,44 @@ describe("CLI endpoint mapping", () => {
     ).toThrow(/must be a full Huawei doc URL/);
   });
 
+  it("maps fetch URLs for each of the 5 supported catalogs (en)", () => {
+    expect(
+      resolveFetchEndpoint(
+        "https://developer.huawei.com/consumer/en/doc/harmonyos-releases/overview-allversion",
+      ),
+    ).toEqual({
+      path: "harmonyos-releases/overview-allversion",
+      language: "en",
+    });
+    expect(
+      resolveFetchEndpoint(
+        "https://developer.huawei.com/consumer/en/doc/design-guides/design-concepts-0000001795698445",
+      ),
+    ).toEqual({
+      path: "design-guides/design-concepts-0000001795698445",
+      language: "en",
+    });
+    expect(
+      resolveFetchEndpoint(
+        "https://developer.huawei.com/consumer/en/doc/best-practices/bpta-app-architecture-overview",
+      ),
+    ).toEqual({
+      path: "best-practices/bpta-app-architecture-overview",
+      language: "en",
+    });
+  });
+
+  it("maps fetch /consumer/en/doc/ prefixed paths for the releases catalog", () => {
+    expect(
+      resolveFetchEndpoint(
+        "/consumer/en/doc/harmonyos-releases/overview-allversion",
+      ),
+    ).toEqual({
+      path: "harmonyos-releases/overview-allversion",
+      language: "en",
+    });
+  });
+
   it("resolves search endpoint with default en language", () => {
     expect(resolveSearchEndpoint("UIAbility", "en")).toBe(
       "/search?q=UIAbility&language=en",

@@ -2,6 +2,7 @@ import { StreamableHTTPTransport } from "@hono/mcp";
 import type { Context } from "hono";
 import { Hono } from "hono";
 import { fetchHarmonyOSCatalog, renderCatalogMarkdown } from "./lib/catalog";
+import { type CatalogName, isCatalogName } from "./lib/catalog-name";
 import {
   assertRenderedMarkdownWithinLimit,
   MAX_MCP_REQUEST_BYTES,
@@ -9,15 +10,11 @@ import {
   UpstreamPolicyError,
   UpstreamSizeError,
 } from "./lib/fetch";
-import { fetchGuidePageData, renderGuideMarkdown } from "./lib/guides";
+import { fetchAndRenderCatalogPage } from "./lib/generic";
 import { DEFAULT_LANGUAGE, isLanguage, type Language } from "./lib/language";
 import { createMcpServer, MCP_SERVER_INFO } from "./lib/mcp";
 import { PUBLIC_ORIGIN } from "./lib/origin";
 import { enforceRateLimit } from "./lib/rate-limit";
-import {
-  fetchReferencePageData,
-  renderReferenceMarkdown,
-} from "./lib/reference";
 import { renderSearchMarkdown, searchHarmonyOSDocs } from "./lib/search";
 import {
   createSkillIndex,
@@ -27,7 +24,6 @@ import {
   skillIndexHeaders,
 } from "./lib/skill";
 import { UPSTREAM_CONTRACT } from "./lib/upstream-contract";
-import { generateHuaweiDocUrl } from "./lib/url";
 import { VERSION } from "./lib/version";
 import { buildWebMcpManifest } from "./lib/webmcp";
 
@@ -42,7 +38,6 @@ const app = new Hono<{ Bindings: Env }>();
 const ROBOTS_HEADER = "noindex, nofollow, noarchive";
 const DOC_CACHE = "public, max-age=3600, s-maxage=86400";
 const SHORT_CACHE = "public, max-age=300, s-maxage=600";
-const SUPPORTED_CATALOGS = ["harmonyos-guides", "harmonyos-references"];
 
 function origin(c: Context): string {
   return new URL(c.req.url).origin;
@@ -100,20 +95,16 @@ function bodyTooLarge(): Response {
 
 async function renderDocument(
   c: Context,
-  catalogName: "harmonyos-guides" | "harmonyos-references",
+  catalogName: CatalogName,
   path: string,
   language: Language,
 ): Promise<Response> {
-  const data =
-    catalogName === "harmonyos-guides"
-      ? await fetchGuidePageData(path, language)
-      : await fetchReferencePageData(path, language);
-  const content =
-    catalogName === "harmonyos-guides"
-      ? renderGuideMarkdown(data, path, language)
-      : renderReferenceMarkdown(data, path, language);
+  const { sourceUrl, content } = await fetchAndRenderCatalogPage(
+    catalogName,
+    path,
+    language,
+  );
   const bounded = assertRenderedMarkdownWithinLimit(content);
-  const sourceUrl = generateHuaweiDocUrl(path, language, catalogName);
   setNoIndex(c, DOC_CACHE);
   c.header("Content-Location", sourceUrl);
   c.header("ETag", await sha256(bounded));
@@ -153,20 +144,15 @@ app.get("/consumer/:lang/doc/:catalog/:path{.+}", async (c) => {
   const lang = c.req.param("lang");
   if (!isLanguage(lang)) return c.json({ error: "Unsupported language" }, 400);
   const catalogName = c.req.param("catalog");
-  if (!SUPPORTED_CATALOGS.includes(catalogName))
+  if (!isCatalogName(catalogName))
     return c.json({ error: "Unsupported catalog" }, 400);
-  return renderDocument(
-    c,
-    catalogName as "harmonyos-guides" | "harmonyos-references",
-    c.req.param("path"),
-    lang,
-  );
+  return renderDocument(c, catalogName, c.req.param("path"), lang);
 });
 
 app.get("/catalog", async (c) => {
   const catalogName = c.req.query("catalogName") ?? "harmonyos-guides";
   const languageParam = c.req.query("language") ?? DEFAULT_LANGUAGE;
-  if (!SUPPORTED_CATALOGS.includes(catalogName) || !isLanguage(languageParam))
+  if (!isCatalogName(catalogName) || !isLanguage(languageParam))
     return c.json({ error: "Unsupported catalog" }, 400);
   const depthRaw = c.req.query("depth");
   const depth = depthRaw ? Number(depthRaw) : undefined;

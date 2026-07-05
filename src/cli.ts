@@ -1,12 +1,8 @@
 import { spawn } from "node:child_process";
 import { parseCliArgs, resolveFetchEndpoint } from "./lib/cli-endpoints";
-import { fetchGuidePageData, renderGuideMarkdown } from "./lib/guides";
-import {
-  fetchReferencePageData,
-  renderReferenceMarkdown,
-} from "./lib/reference";
+import { fetchAndRenderCatalogPage } from "./lib/generic";
 import { renderSearchMarkdown, searchHarmonyOSDocs } from "./lib/search";
-import { generateHuaweiDocUrl, splitDocsPath } from "./lib/url";
+import { splitDocsPath } from "./lib/url";
 
 export async function main(argv = process.argv.slice(2)): Promise<void> {
   const args = parseCliArgs(argv);
@@ -21,22 +17,15 @@ export async function main(argv = process.argv.slice(2)): Promise<void> {
   if (args.command === "fetch") {
     const { path, language } = resolveFetchEndpoint(args.input);
     const { catalogName, pagePath } = splitDocsPath(path);
-    const sourceUrl = generateHuaweiDocUrl(pagePath, language, catalogName);
-    if (catalogName === "harmonyos-guides") {
-      const data = await fetchGuidePageData(pagePath, language);
-      const content = renderGuideMarkdown(data, pagePath, language);
-      const output = args.json
-        ? JSON.stringify({ url: sourceUrl, content }, null, 2)
-        : content;
-      process.stdout.write(`${output}\n`);
-    } else {
-      const data = await fetchReferencePageData(pagePath, language);
-      const content = renderReferenceMarkdown(data, pagePath, language);
-      const output = args.json
-        ? JSON.stringify({ url: sourceUrl, content }, null, 2)
-        : content;
-      process.stdout.write(`${output}\n`);
-    }
+    const { sourceUrl, content } = await fetchAndRenderCatalogPage(
+      catalogName,
+      pagePath,
+      language,
+    );
+    const output = args.json
+      ? JSON.stringify({ url: sourceUrl, content }, null, 2)
+      : content;
+    process.stdout.write(`${output}\n`);
     return;
   }
   if (args.command === "serve") {

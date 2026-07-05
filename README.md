@@ -29,7 +29,7 @@ https://developer.huawei.com/consumer/en/doc/harmonyos-guides/start-overview
 https://hulistmi-ai.y6vd2dkjgb.workers.dev/consumer/en/doc/harmonyos-guides/start-overview
 ```
 
-This works for all HarmonyOS guides and API reference documentation.
+This works for all HarmonyOS Guides, References, Release Notes, Design, and Best Practices catalogs. The supported `catalogName` values are: `harmonyos-guides`, `harmonyos-references`, `harmonyos-releases`, `design-guides`, `best-practices`.
 
 Both English (`en`, default) and Chinese (`cn`) documentation are supported.
 For `fetch`, the language is encoded in the URL prefix (`/consumer/en/doc/...`
@@ -92,7 +92,7 @@ you can proxy over stdio using `mcp-remote`:
   - Returns content as Markdown
 
 - `fetchHarmonyOSCatalog` - Fetches a HarmonyOS documentation catalog tree
-  - Parameters: `catalogName` ("harmonyos-guides" | "harmonyos-references"), `language` (`"en" | "cn"`, default `"en"`), `depth` (number, optional)
+  - Parameters: `catalogName` (`"harmonyos-guides" | "harmonyos-references" | "harmonyos-releases" | "design-guides" | "best-practices"`), `language` (`"en" | "cn"`, default `"en"`), `depth` (number, optional)
   - Returns the catalog as a Markdown listing
 
 ### WebMCP

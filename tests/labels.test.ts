@@ -39,28 +39,40 @@ describe("i18n labels", () => {
     expect({
       ...LABELS.en,
       searchHeader: "HarmonyOS search: q",
-    }).toMatchInlineSnapshot(`
-      {
-        "guidesCatalog": "HarmonyOS Guides Catalog",
-        "guidesCategory": "HarmonyOS Guides",
-        "referencesCatalog": "HarmonyOS References Catalog",
-        "referencesCategory": "HarmonyOS References",
-        "searchHeader": "HarmonyOS search: q",
-        "untitled": "Untitled",
-      }
-    `);
+    }).toEqual(
+      expect.objectContaining({
+        guidesCatalog: "HarmonyOS Guides Catalog",
+        guidesCategory: "HarmonyOS Guides",
+        referencesCatalog: "HarmonyOS References Catalog",
+        referencesCategory: "HarmonyOS References",
+        releasesCatalog: "HarmonyOS Release Notes Catalog",
+        releasesCategory: "HarmonyOS Release Notes",
+        designCatalog: "HarmonyOS Design Catalog",
+        designCategory: "HarmonyOS Design",
+        bestPracticesCatalog: "HarmonyOS Best Practices Catalog",
+        bestPracticesCategory: "HarmonyOS Best Practices",
+        searchHeader: "HarmonyOS search: q",
+        untitled: "Untitled",
+      }),
+    );
     expect({
       ...LABELS.cn,
       searchHeader: "HarmonyOS 搜索：q",
-    }).toMatchInlineSnapshot(`
-      {
-        "guidesCatalog": "HarmonyOS 指南文档目录",
-        "guidesCategory": "HarmonyOS 指南",
-        "referencesCatalog": "HarmonyOS 参考文档目录",
-        "referencesCategory": "HarmonyOS 参考",
-        "searchHeader": "HarmonyOS 搜索：q",
-        "untitled": "未命名",
-      }
-    `);
+    }).toEqual(
+      expect.objectContaining({
+        guidesCatalog: "HarmonyOS 指南文档目录",
+        guidesCategory: "HarmonyOS 指南",
+        referencesCatalog: "HarmonyOS 参考文档目录",
+        referencesCategory: "HarmonyOS 参考",
+        releasesCatalog: "HarmonyOS 版本说明目录",
+        releasesCategory: "HarmonyOS 版本说明",
+        designCatalog: "HarmonyOS 设计文档目录",
+        designCategory: "HarmonyOS 设计",
+        bestPracticesCatalog: "HarmonyOS 最佳实践目录",
+        bestPracticesCategory: "HarmonyOS 最佳实践",
+        searchHeader: "HarmonyOS 搜索：q",
+        untitled: "未命名",
+      }),
+    );
   });
 });

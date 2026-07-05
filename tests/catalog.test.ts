@@ -1,6 +1,16 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { fetchHarmonyOSCatalog } from "../src/lib/catalog";
+import {
+  fetchHarmonyOSCatalog,
+  renderCatalogMarkdown,
+} from "../src/lib/catalog";
+import {
+  CATALOG_TITLE_KEYS,
+  type CatalogName,
+  SUPPORTED_CATALOGS,
+} from "../src/lib/catalog-name";
 import { fetchHuaweiJson } from "../src/lib/fetch";
+import { LABELS } from "../src/lib/labels";
+import type { Language } from "../src/lib/language";
 
 vi.mock("../src/lib/fetch", () => ({
   fetchHuaweiJson: vi.fn(),
@@ -70,5 +80,22 @@ describe("HarmonyOS catalog", () => {
       catalogName: "harmonyos-guides",
       language: "cn",
     });
+  });
+
+  it("renderCatalogMarkdown uses the correct H1 from CATALOG_TITLE_KEYS for every supported catalog (en+cn)", () => {
+    const emptyCatalog = {
+      catalogName: "harmonyos-guides" as CatalogName,
+      language: "en" as Language,
+      items: [],
+    };
+    for (const catalogName of SUPPORTED_CATALOGS) {
+      for (const language of ["en", "cn"] as const) {
+        emptyCatalog.catalogName = catalogName;
+        emptyCatalog.language = language;
+        const rendered = renderCatalogMarkdown(emptyCatalog);
+        const expectedH1 = LABELS[language][CATALOG_TITLE_KEYS[catalogName]];
+        expect(rendered.split("\n", 1)[0]).toBe(`# ${expectedH1}`);
+      }
+    }
   });
 });

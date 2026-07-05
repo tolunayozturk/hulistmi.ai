@@ -1,3 +1,8 @@
+import {
+  CATALOG_TITLE_KEYS,
+  type CatalogName,
+  isCatalogName,
+} from "./catalog-name";
 import { fetchHuaweiJson, NotFoundError, UpstreamSizeError } from "./fetch";
 import { LABELS } from "./labels";
 import { DEFAULT_LANGUAGE, type Language } from "./language";
@@ -5,10 +10,6 @@ import { UPSTREAM_CONTRACT } from "./upstream-contract";
 
 const MAX_CATALOG_ITEMS = 20_000;
 const MAX_CATALOG_UPSTREAM_BYTES = 5_000_000;
-const SUPPORTED_CATALOGS = new Set([
-  "harmonyos-guides",
-  "harmonyos-references",
-]);
 
 export interface HarmonyCatalogItem {
   title: string;
@@ -17,21 +18,22 @@ export interface HarmonyCatalogItem {
 }
 
 export interface HarmonyCatalog {
-  catalogName: string;
+  catalogName: CatalogName;
   language: Language;
   items: HarmonyCatalogItem[];
 }
 
 export async function fetchHarmonyOSCatalog(
-  catalogName: string,
+  catalogName: CatalogName,
   language: Language = DEFAULT_LANGUAGE,
 ): Promise<HarmonyCatalog> {
-  if (!SUPPORTED_CATALOGS.has(catalogName))
+  if (!isCatalogName(catalogName))
     throw new NotFoundError("Unsupported HarmonyOS catalog");
   const baseRequest =
     UPSTREAM_CONTRACT.catalogs[
       catalogName as keyof typeof UPSTREAM_CONTRACT.catalogs
-    ].request;
+    ]?.request;
+  if (!baseRequest) throw new NotFoundError("Unsupported HarmonyOS catalog");
   const request = {
     ...baseRequest,
     body: { ...baseRequest.body, language },
@@ -114,10 +116,7 @@ export function renderCatalogMarkdown(
   maxDepth?: number,
 ): string {
   const labels = LABELS[catalog.language];
-  const title =
-    catalog.catalogName === "harmonyos-guides"
-      ? labels.guidesCatalog
-      : labels.referencesCatalog;
+  const title = labels[CATALOG_TITLE_KEYS[catalog.catalogName]];
   const lines = [`# ${title}`, ""];
   lines.push(...renderTreeItems(catalog.items, 1, maxDepth));
   return lines.join("\n");

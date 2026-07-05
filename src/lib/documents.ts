@@ -1,3 +1,4 @@
+import type { CatalogName } from "./catalog-name";
 import {
   fetchHuaweiJson,
   NotFoundError,
@@ -43,13 +44,13 @@ const GET_CENTER_DOCUMENT_URL =
   "https://svc-drcn.developer.huawei.com/community/servlet/consumer/cn/documentPortal/getCenterDocument";
 
 export async function fetchHarmonyDocumentPageData(
-  catalogName: "harmonyos-guides" | "harmonyos-references",
+  catalogName: CatalogName,
   path: string,
   language: Language = DEFAULT_LANGUAGE,
 ): Promise<HarmonyDocumentValue> {
+  const pinned = DOCUMENTS[documentKey(catalogName, path)];
   const entry = withLanguage(
-    DOCUMENTS[documentKey(catalogName, path)] ??
-      buildEntry(catalogName, path, language),
+    pinned ?? buildEntry(catalogName, path, language),
     language,
   );
 
@@ -91,15 +92,12 @@ function withLanguage(
   };
 }
 
-function documentKey(
-  catalogName: "harmonyos-guides" | "harmonyos-references",
-  path: string,
-): string {
+function documentKey(catalogName: CatalogName, path: string): string {
   return `${catalogName}/${normalizeDocumentSlug(path)}`;
 }
 
 function buildEntry(
-  catalogName: "harmonyos-guides" | "harmonyos-references",
+  catalogName: CatalogName,
   path: string,
   language: Language,
 ): DocumentContractEntry {

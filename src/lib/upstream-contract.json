@@ -31,6 +31,39 @@
         }
       },
       "responseHeaders": { "content-type": "application/json" }
+    },
+    "harmonyos-releases": {
+      "request": {
+        "url": "https://svc-drcn.developer.huawei.com/community/servlet/consumer/cn/documentPortal/getCatalogTree",
+        "headers": {},
+        "body": {
+          "catalogName": "harmonyos-releases",
+          "showHide": "1"
+        }
+      },
+      "responseHeaders": { "content-type": "application/json" }
+    },
+    "design-guides": {
+      "request": {
+        "url": "https://svc-drcn.developer.huawei.com/community/servlet/consumer/cn/documentPortal/getCatalogTree",
+        "headers": {},
+        "body": {
+          "catalogName": "design-guides",
+          "showHide": "1"
+        }
+      },
+      "responseHeaders": { "content-type": "application/json" }
+    },
+    "best-practices": {
+      "request": {
+        "url": "https://svc-drcn.developer.huawei.com/community/servlet/consumer/cn/documentPortal/getCatalogTree",
+        "headers": {},
+        "body": {
+          "catalogName": "best-practices",
+          "showHide": "1"
+        }
+      },
+      "responseHeaders": { "content-type": "application/json" }
     }
   },
   "documents": {
