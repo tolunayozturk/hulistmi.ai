@@ -16,7 +16,11 @@ interface NodeLike {
 export function htmlToMarkdown(html: string): string {
   const $ = cheerio.load(html);
   $("script,style,noscript").remove();
+  // Strip anchor name elements (Huawei doc ID anchors)
+  $("a[name]").remove();
 
+  // Remove h1 — it's already rendered as the document title by renderDocumentMarkdown
+  $("h1").remove();
   const root = $("body").length ? $("body") : $.root();
   return renderChildren(root.get(0) as NodeLike, $)
     .replace(/\n{3,}/g, "\n\n")
@@ -44,12 +48,25 @@ function renderBlock(node: NodeLike, $: cheerio.CheerioAPI): string {
     case "h5":
     case "h6": {
       const depth = Number(tag.slice(1));
-      return `${"#".repeat(depth)} ${inlineText(node, $)}`;
+      let text = inlineText(node, $);
+      // Strip [hX] artifacts from headings
+      text = text.replace(/\[h[1-6]\]/gi, "");
+      return `${"#".repeat(depth)} ${text}`;
     }
     case "p":
       return inlineText(node, $);
-    case "pre":
-      return `\`\`\`\n${element.text().trim()}\n\`\`\``;
+    case "pre": {
+      const cls = $(node).attr("class");
+      const text = element.text();
+      const langMatch = cls
+        ? cls.match(
+            /\b(ts|json|html|xml|bash|sh|css|js|java|python|cpp|kotlin|swift|go|rust|ruby)\b/,
+          )
+        : null;
+      const codeLang = langMatch ? langMatch[1] : "";
+      const fence = codeLang ? `\`\`\`${codeLang}\n` : `\`\`\`\n`;
+      return `${fence}${text.trim()}\n\`\`\``;
+    }
     case "ul":
       return renderList(node, $, false);
     case "ol":
@@ -74,6 +91,18 @@ function renderBlock(node: NodeLike, $: cheerio.CheerioAPI): string {
     case "tbody":
     case "tfoot":
       return renderChildren(node, $);
+    case "strong":
+      return `**${inlineText(node, $)}**`;
+    case "em":
+    case "i":
+      return `*${inlineText(node, $)}*`;
+    case "sup":
+      return `^{${inlineText(node, $)}}`;
+    case "sub":
+      return `_{${inlineText(node, $)}}`;
+    case "span":
+      // span is often used for image wrappers or styling — recurse
+      return renderChildren(node, $);
     default:
       return hasBlockChildren(node)
         ? renderChildren(node, $)
@@ -90,9 +119,18 @@ function renderList(
     .filter((child) => child.type === "tag" && tagName(child) === "li")
     .map((item, index) => {
       const marker = ordered ? `${index + 1}.` : "-";
-      const text = inlineTextWithoutNestedBlocks(item, $);
-      const nested = (item.children ?? [])
-        .filter((child) => ["ul", "ol"].includes(tagName(child)))
+      // Render all non-nested-list children using renderChildren so
+      // block-level elements like <pre> get proper fenced code blocks.
+      const allChildren = item.children ?? [];
+      const nestedChildren = allChildren.filter((c) =>
+        ["ul", "ol"].includes(tagName(c)),
+      );
+      const nonNested = allChildren.filter(
+        (c) => !["ul", "ol"].includes(tagName(c)),
+      );
+      const textNode = { type: "tag", tagName: "div", children: nonNested };
+      const text = renderChildren(textNode as NodeLike, $).trim();
+      const nested = nestedChildren
         .map((child) =>
           renderList(child, $, tagName(child) === "ol")
             .split("\n")
@@ -139,18 +177,6 @@ function escapeTableCell(text: string): string {
   return text.replace(/\|/g, "\\|").replace(/\n+/g, "<br>");
 }
 
-function inlineTextWithoutNestedBlocks(
-  node: NodeLike,
-  $: cheerio.CheerioAPI,
-): string {
-  return (node.children ?? [])
-    .filter((child) => !["ul", "ol"].includes(tagName(child)))
-    .map((child) => inlineNode(child, $))
-    .join("")
-    .replace(/\s+/g, " ")
-    .trim();
-}
-
 function inlineText(node: NodeLike, $: cheerio.CheerioAPI): string {
   return (node.children ?? [])
     .map((child) => inlineNode(child, $))
@@ -172,9 +198,17 @@ function inlineNode(node: NodeLike, $: cheerio.CheerioAPI): string {
     return href && text ? `[${text}](${href})` : text;
   }
   if (tag === "img") {
+    const src = $(node).attr("src") ?? "";
     const alt = $(node).attr("alt") ?? $(node).attr("title") ?? "";
-    return alt ? `![${alt}](${$(node).attr("src") ?? ""})` : "";
+    // Use a short filename from the URL as alt when none is provided
+    const fallbackAlt =
+      alt || (src ? (src.split("/").pop()?.split("?")[0] ?? "") : "");
+    return `![${fallbackAlt}](${src})`;
   }
+  if (tag === "strong") return `**${inlineText(node, $)}**`;
+  if (tag === "em" || tag === "i") return `*${inlineText(node, $)}*`;
+  if (tag === "sup") return `^{${inlineText(node, $)}}`;
+  if (tag === "sub") return `_{${inlineText(node, $)}}`;
   return inlineText(node, $);
 }
 
