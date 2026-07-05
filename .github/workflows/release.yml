@@ -45,6 +45,8 @@ jobs:
       - run: npm ci
       - name: Apply changesets
         run: npx changeset version
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
       - name: Sync version.ts
         run: node scripts/sync-version.mjs
       - name: Stage changes
