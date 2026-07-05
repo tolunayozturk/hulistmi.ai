@@ -1,67 +1,73 @@
 name: Release
-
 on:
   push:
-    tags:
-      - "v*"
-
+    branches: [master]
 concurrency:
   group: release-${{ github.ref }}
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 permissions:
-  contents: write
-  id-token: write
+  contents: read
 
 jobs:
-  release:
+  ci:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v6
         with:
           node-version: 24
-          registry-url: https://registry.npmjs.org
-          package-manager-cache: false
-
+          cache: npm
       - run: npm ci
       - run: npm run check:ci
       - run: npm run test:run
-
-      - name: Compute tag version
-        id: ver
-        run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
-
-      - name: Assert tag matches package.json version
-        run: |
-          pkg=$(node -p "require('./package.json').version")
-          if [ "$pkg" != "${{ steps.ver.outputs.version }}" ]; then
-            echo "::error::package.json=$pkg vs tag=${{ steps.ver.outputs.version }}"
-            exit 1
-          fi
-
-      - name: Check if version already on registry
-        id: published
-        run: |
-          if npm view "@hulistmi/hulistmi@${{ steps.ver.outputs.version }}" version >/dev/null 2>&1; then
-            echo "already-published=true" >> "$GITHUB_OUTPUT"
-            echo "Version ${{ steps.ver.outputs.version }} already on npm; skipping publish."
-          else
-            echo "already-published=false" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Publish to npm (trusted publishing via OIDC; provenance is automatic)
-        if: steps.published.outputs.already-published != 'true'
-        run: npm publish --provenance --access public
-
-      - name: Create GitHub release
-        if: steps.published.outputs.already-published != 'true'
+      - name: gitleaks
+        uses: gitleaks/gitleaks-action@v3
         env:
-          GH_TOKEN: ${{ github.token }}
+          GITHUB_TOKEN: ${{ github.token }}
+
+  release:
+    needs: ci
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          ref: ${{ github.sha }}
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Apply changesets
+        run: npx changeset version
+      - name: Sync version.ts
+        run: node scripts/sync-version.mjs
+      - name: Stage changes
+        id: stage
         run: |
-          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
-            echo "Release $GITHUB_REF_NAME already exists"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No pending changesets; release skipped."
+            echo "changed=false" >> "$GITHUB_OUTPUT"
           else
-            gh release create "$GITHUB_REF_NAME" --generate-notes
+            echo "changed=true" >> "$GITHUB_OUTPUT"
           fi
+      - name: Commit and push bump
+        if: steps.stage.outputs.changed == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "chore: version packages"
+          version="$(node -p "require('./package.json').version")"
+          if git ls-remote --tags origin "refs/tags/v${version}" | grep -q .; then
+            echo "Tag v${version} already exists on remote; skipping."
+          else
+            git tag "v${version}"
+          fi
+          git push origin HEAD:master
+          git push origin "v${version}"
