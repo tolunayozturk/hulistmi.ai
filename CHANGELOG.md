@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.1.0
+
+### Minor Changes
+
+- [`1a006c7`](https://github.com/tolunayozturk/hulistmi.ai/commit/1a006c74441a56102483bcbb1d1021cfd4c50275) Thanks [@tolunayozturk](https://github.com/tolunayozturk)! - Add 3 new catalogs (releases, design-guides, best-practices) with generic catalog pipeline.
+
 ## 1.0.5
 
 ### Patch Changes
