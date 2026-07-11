@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.1.3
+
+### Patch Changes
+
+- [`31d4d07`](https://github.com/tolunayozturk/hulistmi.ai/commit/31d4d07df660adfcfe58e3c604cc6a01cf47837c) - Enforce rate limiting on public routes via Cloudflare ratelimits binding
+
 ## 1.1.2
 
 ### Patch Changes
