@@ -22,6 +22,7 @@ export async function enforceRateLimit(
       "Content-Type": "application/json",
       "Retry-After": "60",
       "Cache-Control": "no-store",
+      "X-Robots-Tag": "noindex, nofollow, noarchive",
     },
   });
 }

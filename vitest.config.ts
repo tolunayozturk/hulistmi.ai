@@ -5,6 +5,11 @@ export default defineWorkersConfig({
     poolOptions: {
       workers: {
         wrangler: { configPath: "./wrangler.jsonc" },
+        miniflare: {
+          ratelimits: {
+            RATE_LIMITER: { simple: { limit: 10, period: 60 } },
+          },
+        },
       },
     },
   },
