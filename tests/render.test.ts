@@ -83,3 +83,29 @@ describe("HarmonyOS Markdown rendering", () => {
     expect(cn).toContain("title: 未命名");
   });
 });
+
+describe("list rendering", () => {
+  it("keeps a list item's inline content on one line and preserves code spans", () => {
+    expect(
+      htmlToMarkdown(
+        "<ul><li><strong>Create</strong>: A UIAbility instance has been created. The system triggers the <code>onCreate</code> callback.</li></ul>",
+      ),
+    ).toBe(
+      "- **Create**: A UIAbility instance has been created. The system triggers the `onCreate` callback.",
+    );
+  });
+
+  it("indents real blocks inside a list item instead of flattening them", () => {
+    expect(
+      htmlToMarkdown(
+        "<ul><li>Outer <code>x</code><pre>const a = 1;</pre><ul><li>inner</li></ul></li></ul>",
+      ),
+    ).toBe("- Outer `x`\n\n  ```\n  const a = 1;\n  ```\n  - inner");
+  });
+
+  it("keeps a definition list's term and definition apart", () => {
+    expect(
+      htmlToMarkdown("<dl><dt>Term</dt><dd>Definition text</dd></dl>"),
+    ).toBe("**Term**\n\nDefinition text");
+  });
+});
