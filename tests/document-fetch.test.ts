@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { fetchHuaweiJson } from "../src/lib/fetch";
+import { fetchHuaweiJson, NotFoundError } from "../src/lib/fetch";
 import { fetchGuidePageData } from "../src/lib/guides";
 
 vi.mock("../src/lib/fetch", () => ({
@@ -48,6 +48,34 @@ describe("HarmonyOS document fetch", () => {
       catalogName: "harmonyos-guides",
       language: "en",
     });
+  });
+
+  it("reports an unknown slug as not found rather than a bad gateway", async () => {
+    mockedFetchHuaweiJson
+      .mockResolvedValueOnce({
+        code: 0,
+        message: "success",
+        value: { isGrayUser: 0 },
+      })
+      .mockResolvedValueOnce({ code: 500, message: "fail" });
+
+    await expect(fetchGuidePageData("does-not-exist-xyz")).rejects.toBeInstanceOf(
+      NotFoundError,
+    );
+  });
+
+  it("still reports a payload with no code at all as a contract change", async () => {
+    mockedFetchHuaweiJson
+      .mockResolvedValueOnce({
+        code: 0,
+        message: "success",
+        value: { isGrayUser: 0 },
+      })
+      .mockResolvedValueOnce({ message: "surprise" });
+
+    await expect(fetchGuidePageData("start-overview")).rejects.toThrowError(
+      "HarmonyOS document response changed shape",
+    );
   });
 
   it("builds verified requests for valid guide slugs that are not prelisted", async () => {
