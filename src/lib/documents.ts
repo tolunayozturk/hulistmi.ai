@@ -32,7 +32,8 @@ const DOCUMENTS = UPSTREAM_CONTRACT.documents as Record<
   string,
   DocumentContractEntry
 >;
-const DOCUMENT_SLUG_PATTERN = /^[a-z0-9][a-z0-9-]*$/;
+// Huawei slugs use "_" as well as "-" (bpta-image_get_and_save, js-apis-net-http_1).
+const DOCUMENT_SLUG_PATTERN = /^[a-z0-9][a-z0-9_-]*$/;
 const GRAY_ID = "11111111111111111111111111111111";
 const CHECK_CENTER_GRAY_USER_URL =
   "https://svc-drcn.developer.huawei.com/community/servlet/consumer/cn/documentPortal/checkCenterGrayUser";
