@@ -20,6 +20,8 @@ jobs:
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          fetch-depth: 0
       - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:
           node-version: 24
@@ -75,6 +77,11 @@ jobs:
 
   # Guard: a code change reached master without a changeset, so no release will
   # ever be cut for it. Fail loudly instead of silently skipping.
+  #
+  # Compares against the tag of the current version rather than the pushed
+  # commit range: github.event.before is unreachable after a force-push, and a
+  # range diff would also re-flag an already-released commit on a workflow
+  # re-run.
   verify:
     needs: release
     if: needs.release.outputs.hasChangesets == 'false' && needs.release.outputs.published != 'true'
@@ -84,21 +91,23 @@ jobs:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           fetch-depth: 0
-      - name: Check this push is either a version bump or release-irrelevant
+      - name: Check master has no unreleased code
         run: |
+          set -euo pipefail
           version="$(node -p "require('./package.json').version")"
-          if ! git ls-remote --tags origin "refs/tags/v${version}" | grep -q .; then
-            echo "Version ${version} is unreleased; publish step will handle it."
-            exit 0
-          fi
-          if git diff --name-only "${{ github.event.before }}" "${{ github.sha }}" \
-            | grep -qE '^(src|bin|public)/'; then
-            echo "::error::Code changed under src/, bin/ or public/ but no changeset is pending" \
-                 "and v${version} is already released. Add a changeset so this ships."
+          if ! git rev-parse -q --verify "refs/tags/v${version}" >/dev/null; then
+            echo "::error::v${version} is not tagged, but the release job did not" \
+                 "publish it. Check the release job log before pushing more commits."
             exit 1
           fi
-          echo "No release-relevant changes in this push."
-
+          changed="$(git diff --name-only "v${version}" HEAD -- src bin public)"
+          if [ -n "$changed" ]; then
+            echo "::error::These files changed since v${version} with no changeset" \
+                 "pending, so they will never ship:"
+            echo "$changed"
+            exit 1
+          fi
+          echo "master matches v${version}; nothing unreleased."
 
   # Keeps the live Worker in step with what was just published to npm.
   # Cloudflare is not covered by npm's OIDC trust, so this needs a stored token.
