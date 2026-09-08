@@ -1,10 +1,12 @@
 import { spawn } from "node:child_process";
 import { parseCliArgs, resolveFetchEndpoint } from "./lib/cli-endpoints";
 import { fetchAndRenderCatalogPage } from "./lib/generic";
+import { configurePublicOrigin } from "./lib/origin";
 import { renderSearchMarkdown, searchHarmonyOSDocs } from "./lib/search";
 import { splitDocsPath } from "./lib/url";
 
 export async function main(argv = process.argv.slice(2)): Promise<void> {
+  configurePublicOrigin(process.env.HULISTMI_PUBLIC_ORIGIN);
   const args = parseCliArgs(argv);
   if (args.command === "search") {
     const result = await searchHarmonyOSDocs(args.query, args.language);

@@ -13,7 +13,7 @@ import {
 import { fetchAndRenderCatalogPage } from "./lib/generic";
 import { DEFAULT_LANGUAGE, isLanguage, type Language } from "./lib/language";
 import { createMcpServer, MCP_SERVER_INFO } from "./lib/mcp";
-import { PUBLIC_ORIGIN } from "./lib/origin";
+import { configurePublicOrigin, publicOrigin } from "./lib/origin";
 import { enforceRateLimit } from "./lib/rate-limit";
 import { renderSearchMarkdown, searchHarmonyOSDocs } from "./lib/search";
 import {
@@ -29,6 +29,8 @@ import { buildWebMcpManifest } from "./lib/webmcp";
 
 export interface Env {
   ASSETS: Fetcher;
+  /** Origin this deployment presents as. Defaults to the serving origin. */
+  PUBLIC_ORIGIN?: string;
   RATE_LIMITER?: {
     limit(options: { key: string }): Promise<{ success: boolean }>;
   };
@@ -42,6 +44,13 @@ const SHORT_CACHE = "public, max-age=300, s-maxage=600";
 function origin(c: Context): string {
   return new URL(c.req.url).origin;
 }
+
+// Every deployment speaks as itself: the binding wins, otherwise the origin actually
+// serving the request.
+app.use("*", async (c, next) => {
+  configurePublicOrigin(c.env?.PUBLIC_ORIGIN ?? origin(c));
+  await next();
+});
 
 function wantsJson(c: Context): boolean {
   return c.req.header("Accept")?.includes("application/json") ?? false;
@@ -131,7 +140,7 @@ app.get("/", async (c) =>
 
 app.get("/bot", (c) =>
   c.text(
-    `hulistmi.ai uses transparent, on-demand requests for HarmonyOS documentation and identifies itself with hulistmi-ai/${VERSION} (+${PUBLIC_ORIGIN}/bot).`,
+    `hulistmi.ai uses transparent, on-demand requests for HarmonyOS documentation and identifies itself with hulistmi-ai/${VERSION} (+${publicOrigin()}/bot).`,
     200,
     {
       "Content-Type": "text/plain; charset=utf-8",

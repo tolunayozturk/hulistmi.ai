@@ -1,4 +1,4 @@
-import { PUBLIC_ORIGIN } from "./origin";
+import { publicOrigin } from "./origin";
 import { UPSTREAM_CONTRACT } from "./upstream-contract";
 import { VERSION } from "./version";
 
@@ -8,7 +8,9 @@ export class UpstreamSizeError extends Error {}
 export class UpstreamTimeoutError extends Error {}
 export class ValidationError extends Error {}
 
-export const HULISTMI_USER_AGENT = `hulistmi-ai/${VERSION} (+${PUBLIC_ORIGIN}/bot)`;
+export function hulistmiUserAgent(): string {
+  return `hulistmi-ai/${VERSION} (+${publicOrigin()}/bot)`;
+}
 export const UPSTREAM_TIMEOUT_MS = 10_000;
 export const MAX_UPSTREAM_RESPONSE_BYTES = 1_048_576;
 export const MAX_RENDERED_MARKDOWN_BYTES = 524_288;
@@ -63,7 +65,7 @@ function verifiedHeaders(request: VerifiedHuaweiRequest): HeadersInit {
   const headers = new Headers({
     "Content-Type": "application/json",
     Accept: "application/json",
-    "User-Agent": HULISTMI_USER_AGENT,
+    "User-Agent": hulistmiUserAgent(),
   });
   for (const [key, value] of Object.entries(request.headers ?? {})) {
     const lower = key.toLowerCase();
