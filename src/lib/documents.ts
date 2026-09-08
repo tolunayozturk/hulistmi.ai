@@ -184,13 +184,20 @@ async function fetchAndValidateDocument(
   request: VerifiedHuaweiRequest,
 ): Promise<HarmonyDocumentValue> {
   const response = await fetchHuaweiJson<HarmonyDocumentResponse>(request);
-  if (response.code !== 0 && response.code !== "0")
+  // Upstream answers an unknown slug with a non-zero code rather than code 404, so a
+  // bare Error here would surface as a 502 and a mirror job would retry a dead slug
+  // forever. A payload with no code at all is a different thing: the contract moved.
+  if (response.code === undefined || response.code === null)
     throw new Error("HarmonyOS document response changed shape");
+  if (response.code !== 0 && response.code !== "0")
+    throw new NotFoundError(
+      `HarmonyOS document is unavailable upstream (code ${response.code})`,
+    );
   if (
     !response.value ||
     response.value.status !== "4" ||
     !response.value.content?.content
   )
-    throw new Error("HarmonyOS document content is unavailable");
+    throw new NotFoundError("HarmonyOS document content is unavailable");
   return response.value;
 }
