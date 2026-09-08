@@ -1,10 +1,15 @@
+# NOTE: npm trusted publishing (OIDC) is bound to this file's path.
+# The npm trusted-publisher config for @hulistmi/hulistmi names
+# `tolunayozturk/hulistmi.ai` + `release.yml`. Renaming or moving this file
+# breaks publishing (the version PR still opens; `changeset publish` fails
+# auth). Update the publisher entry on npmjs.com first if you must rename it.
 name: Release
 on:
   push:
     branches: [master]
 concurrency:
   group: release-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 permissions:
   contents: read
@@ -14,16 +19,20 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 60
     steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-node@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:
           node-version: 24
           cache: npm
       - run: npm ci
       - run: npm run check:ci
+      - run: npm run typecheck
       - run: npm run test:run
+      - run: npm run build:check
       - name: gitleaks
-        uses: gitleaks/gitleaks-action@v3
+        uses: gitleaks/gitleaks-action@e0c47f4f8be36e29cdc102c57e68cb5cbf0e8d1e # v3
         env:
           GITHUB_TOKEN: ${{ github.token }}
 
@@ -33,43 +42,90 @@ jobs:
     timeout-minutes: 15
     permissions:
       contents: write
+      pull-requests: write
+      id-token: write   # npm trusted publishing (OIDC) + provenance
+    outputs:
+      hasChangesets: ${{ steps.changesets.outputs.hasChangesets }}
+      published: ${{ steps.changesets.outputs.published }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           fetch-depth: 0
-          ref: ${{ github.sha }}
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: 24
+          cache: npm
+          registry-url: https://registry.npmjs.org
+      - run: npm ci
+
+      # Normal path: the version bump was made on `dev` (npm run
+      # version:packages) and rode in with the release PR, so no changesets are
+      # pending here -> publish to npm + push the v<version> tag.
+      # Fallback: someone merged code with changesets still pending -> open a
+      # "Version Packages" PR instead of publishing. Either way master is never
+      # pushed to directly, so it can stay protected with no bypass actor.
+      - name: Version or publish
+        id: changesets
+        uses: changesets/action@66d7d1ddafddf1ef45f98ee51a7496f9cdadb2f4 # v2.1.2
+        with:
+          version: npm run version:packages
+          publish: npx changeset publish
+          title: "chore: version packages"
+          commit: "chore: version packages"
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+
+  # Guard: a code change reached master without a changeset, so no release will
+  # ever be cut for it. Fail loudly instead of silently skipping.
+  #
+  # Compares against the tag of the current version rather than the pushed
+  # commit range: github.event.before is unreachable after a force-push, and a
+  # range diff would also re-flag an already-released commit on a workflow
+  # re-run.
+  verify:
+    needs: release
+    if: needs.release.outputs.hasChangesets == 'false' && needs.release.outputs.published != 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          fetch-depth: 0
+      - name: Check master has no unreleased code
+        run: |
+          set -euo pipefail
+          version="$(node -p "require('./package.json').version")"
+          if ! git rev-parse -q --verify "refs/tags/v${version}" >/dev/null; then
+            echo "::error::v${version} is not tagged, but the release job did not" \
+                 "publish it. Check the release job log before pushing more commits."
+            exit 1
+          fi
+          changed="$(git diff --name-only "v${version}" HEAD -- src bin public)"
+          if [ -n "$changed" ]; then
+            echo "::error::These files changed since v${version} with no changeset" \
+                 "pending, so they will never ship:"
+            echo "$changed"
+            exit 1
+          fi
+          echo "master matches v${version}; nothing unreleased."
+
+  # Keeps the live Worker in step with what was just published to npm.
+  # Cloudflare is not covered by npm's OIDC trust, so this needs a stored token.
+  deploy:
+    needs: release
+    if: needs.release.outputs.published == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: production
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:
           node-version: 24
           cache: npm
       - run: npm ci
-      - name: Apply changesets
-        run: npx changeset version
+      - name: Deploy Worker
+        run: npm run deploy
         env:
-          GITHUB_TOKEN: ${{ github.token }}
-      - name: Sync version.ts
-        run: node scripts/sync-version.mjs
-      - name: Stage changes
-        id: stage
-        run: |
-          git add -A
-          if git diff --cached --quiet; then
-            echo "No pending changesets; release skipped."
-            echo "changed=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "changed=true" >> "$GITHUB_OUTPUT"
-          fi
-      - name: Commit and push bump
-        if: steps.stage.outputs.changed == 'true'
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git commit -m "chore: version packages"
-          version="$(node -p "require('./package.json').version")"
-          if git ls-remote --tags origin "refs/tags/v${version}" | grep -q .; then
-            echo "Tag v${version} already exists on remote; skipping."
-          else
-            git tag "v${version}"
-          fi
-          git push origin HEAD:master
-          git push origin "v${version}"
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}

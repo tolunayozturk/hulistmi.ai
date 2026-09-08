@@ -1,23 +1,26 @@
 import { SELF } from "cloudflare:test";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const fetchHuaweiJsonMock = vi.fn(async (request: { url: string }) => {
-  if (request.url.includes("/checkCenterGrayUser")) {
-    return { code: 0, message: "success", value: { isGrayUser: 0 } };
-  }
-  return {
-    code: 0,
-    message: "success",
-    value: {
-      status: "4",
-      title: "Preparations for Development",
-      content: { content: "<p>Build a HarmonyOS app.</p>" },
-    },
-  };
-});
+const fetchHuaweiJsonMock = vi.fn(
+  async (request: { url: string; body?: unknown }) => {
+    if (request.url.includes("/checkCenterGrayUser")) {
+      return { code: 0, message: "success", value: { isGrayUser: 0 } };
+    }
+    return {
+      code: 0,
+      message: "success",
+      value: {
+        status: "4",
+        title: "Preparations for Development",
+        content: { content: "<p>Build a HarmonyOS app.</p>" },
+      },
+    };
+  },
+);
 
 vi.mock("../src/lib/fetch", () => ({
-  fetchHuaweiJson: (...args: unknown[]) => fetchHuaweiJsonMock(...args),
+  fetchHuaweiJson: (request: { url: string; body?: unknown }) =>
+    fetchHuaweiJsonMock(request),
   assertRenderedMarkdownWithinLimit: (content: string) => content,
   NotFoundError: class NotFoundError extends Error {},
   UpstreamPolicyError: class UpstreamPolicyError extends Error {},

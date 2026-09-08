@@ -78,7 +78,10 @@ function withLanguage(
 ): DocumentContractEntry {
   const stamp = (request: VerifiedHuaweiRequest): VerifiedHuaweiRequest => ({
     ...request,
-    body: { ...request.body, language } as BodyWithLanguage,
+    body: {
+      ...(request.body as Record<string, unknown>),
+      language,
+    } satisfies BodyWithLanguage,
   });
   const stampOptional = (
     request: VerifiedHuaweiRequest | undefined,
@@ -144,7 +147,9 @@ function buildCenterRequests(
   response: GrayUserResponse,
   path: string,
   language: Language,
-): Pick<DocumentContractEntry, "getCenterRootNodeTree" | "getCenterDocument"> {
+): Required<
+  Pick<DocumentContractEntry, "getCenterRootNodeTree" | "getCenterDocument">
+> {
   const value = response.value;
   const fileName = value?.filename ?? normalizeDocumentSlug(path);
   if (

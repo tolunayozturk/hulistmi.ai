@@ -1,4 +1,5 @@
 import * as cheerio from "cheerio";
+import type { AnyNode } from "domhandler";
 import { LABELS } from "./labels";
 import { DEFAULT_LANGUAGE, type Language } from "./language";
 import { PUBLIC_ORIGIN } from "./origin";
@@ -13,6 +14,11 @@ interface NodeLike {
   children?: NodeLike[];
 }
 
+// NodeLike is a structural subset of cheerio's AnyNode union, kept so the walk
+// below can read tagName/data/children without narrowing at every access.
+// cheerio's own selectors need the real union, so convert at that boundary.
+const el = (node: NodeLike): AnyNode => node as unknown as AnyNode;
+
 export function htmlToMarkdown(html: string): string {
   const $ = cheerio.load(html);
   $("script,style,noscript").remove();
@@ -21,8 +27,11 @@ export function htmlToMarkdown(html: string): string {
 
   // Remove h1 — it's already rendered as the document title by renderDocumentMarkdown
   $("h1").remove();
-  const root = $("body").length ? $("body") : $.root();
-  return renderChildren(root.get(0) as NodeLike, $)
+  const body = $("body");
+  const root: cheerio.Cheerio<AnyNode> = body.length ? body : $.root();
+  const first = root.get(0);
+  if (!first) return "";
+  return renderChildren(first as unknown as NodeLike, $)
     .replace(/\n{3,}/g, "\n\n")
     .trim();
 }
@@ -39,7 +48,7 @@ function renderBlock(node: NodeLike, $: cheerio.CheerioAPI): string {
   if (node.type !== "tag") return "";
 
   const tag = (node.tagName ?? node.name ?? "").toLowerCase();
-  const element = $(node);
+  const element = $(el(node));
   switch (tag) {
     case "h1":
     case "h2":
@@ -56,7 +65,7 @@ function renderBlock(node: NodeLike, $: cheerio.CheerioAPI): string {
     case "p":
       return inlineText(node, $);
     case "pre": {
-      const cls = $(node).attr("class");
+      const cls = $(el(node)).attr("class");
       const text = element.text();
       const langMatch = cls
         ? cls.match(
@@ -145,7 +154,7 @@ function renderList(
 }
 
 function renderTable(node: NodeLike, $: cheerio.CheerioAPI): string {
-  const rows = $(node)
+  const rows = $(el(node))
     .find("tr")
     .toArray()
     .map((row) =>
@@ -191,15 +200,15 @@ function inlineNode(node: NodeLike, $: cheerio.CheerioAPI): string {
 
   const tag = tagName(node);
   if (tag === "br") return "\n";
-  if (tag === "code") return `\`${normalizeText($(node).text())}\``;
+  if (tag === "code") return `\`${normalizeText($(el(node)).text())}\``;
   if (tag === "a") {
     const text = inlineText(node, $);
-    const href = $(node).attr("href");
+    const href = $(el(node)).attr("href");
     return href && text ? `[${text}](${href})` : text;
   }
   if (tag === "img") {
-    const src = $(node).attr("src") ?? "";
-    const alt = $(node).attr("alt") ?? $(node).attr("title") ?? "";
+    const src = $(el(node)).attr("src") ?? "";
+    const alt = $(el(node)).attr("alt") ?? $(el(node)).attr("title") ?? "";
     // Use a short filename from the URL as alt when none is provided
     const fallbackAlt =
       alt || (src ? (src.split("/").pop()?.split("?")[0] ?? "") : "");
