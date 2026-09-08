@@ -76,6 +76,10 @@ function renderBlock(node: NodeLike, $: cheerio.CheerioAPI): string {
       const fence = codeLang ? `\`\`\`${codeLang}\n` : `\`\`\`\n`;
       return `${fence}${text.trim()}\n\`\`\``;
     }
+    case "code":
+      return `\`${normalizeText(element.text())}\``;
+    case "dl":
+      return renderDefinitionList(node, $);
     case "ul":
       return renderList(node, $, false);
     case "ol":
@@ -128,8 +132,11 @@ function renderList(
     .filter((child) => child.type === "tag" && tagName(child) === "li")
     .map((item, index) => {
       const marker = ordered ? `${index + 1}.` : "-";
-      // Render all non-nested-list children using renderChildren so
-      // block-level elements like <pre> get proper fenced code blocks.
+      // Inline children (text, <strong>, <code>, <a>) belong on the marker line;
+      // only genuine blocks like <pre> or <table> become their own paragraph.
+      // Rendering everything through renderChildren joined each of them with a
+      // blank line, which split one sentence across four blocks and dropped the
+      // backticks around <code>, since renderBlock had no code case.
       const allChildren = item.children ?? [];
       const nestedChildren = allChildren.filter((c) =>
         ["ul", "ol"].includes(tagName(c)),
@@ -137,8 +144,11 @@ function renderList(
       const nonNested = allChildren.filter(
         (c) => !["ul", "ol"].includes(tagName(c)),
       );
-      const textNode = { type: "tag", tagName: "div", children: nonNested };
-      const text = renderChildren(textNode as NodeLike, $).trim();
+      const blocks = renderItemBlocks(nonNested, $);
+      const [first = "", ...rest] = blocks;
+      const text = rest.length
+        ? `${first}\n\n${rest.map((block) => indent(block)).join("\n\n")}`
+        : first;
       const nested = nestedChildren
         .map((child) =>
           renderList(child, $, tagName(child) === "ol")
@@ -151,6 +161,85 @@ function renderList(
       return nested ? `${marker} ${text}\n${nested}` : `${marker} ${text}`;
     })
     .join("\n");
+}
+
+const INLINE_TAGS = [
+  "a",
+  "abbr",
+  "b",
+  "br",
+  "code",
+  "em",
+  "i",
+  "img",
+  "kbd",
+  "small",
+  "span",
+  "strong",
+  "sub",
+  "sup",
+  "u",
+];
+
+function isInlineNode(node: NodeLike): boolean {
+  if (node.type === "text") return true;
+  if (node.type !== "tag") return false;
+  const tag = tagName(node);
+  // A <span> wrapping real blocks is a block in disguise.
+  if (tag === "span" && hasBlockChildren(node)) return false;
+  return INLINE_TAGS.includes(tag);
+}
+
+// Group an <li>'s children into rendered blocks, keeping runs of inline nodes
+// together so a sentence stays a sentence.
+function renderItemBlocks(
+  children: NodeLike[],
+  $: cheerio.CheerioAPI,
+): string[] {
+  const blocks: string[] = [];
+  let run: NodeLike[] = [];
+  const flush = () => {
+    if (run.length === 0) return;
+    const text = inlineText({ type: "tag", children: run } as NodeLike, $);
+    if (text) blocks.push(text);
+    run = [];
+  };
+  for (const child of children) {
+    if (isInlineNode(child)) {
+      run.push(child);
+      continue;
+    }
+    flush();
+    const block = renderBlock(child, $).trim();
+    if (block) blocks.push(block);
+  }
+  flush();
+  return blocks;
+}
+
+function indent(block: string): string {
+  return block
+    .split("\n")
+    .map((line) => (line ? `  ${line}` : line))
+    .join("\n");
+}
+
+// Markdown has no definition list, so a term and its definition are rendered as a
+// bold line and a paragraph. Rendering the <dl>'s children as one run concatenated
+// them into "TermDefinition text".
+function renderDefinitionList(node: NodeLike, $: cheerio.CheerioAPI): string {
+  return (node.children ?? [])
+    .filter((child) => ["dt", "dd"].includes(tagName(child)))
+    .map((child) => {
+      const text = renderItemBlocks(child.children ?? [], $)
+        .filter(Boolean)
+        .join("\n\n")
+        .trim();
+      if (!text) return "";
+      return tagName(child) === "dt" ? `**${text}**` : text;
+    })
+    .filter(Boolean)
+    .join("\n\n");
 }
 
 function renderTable(node: NodeLike, $: cheerio.CheerioAPI): string {
