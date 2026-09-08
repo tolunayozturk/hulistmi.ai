@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { renderSearchMarkdown, searchHarmonyOSDocs } from "../src/lib/search";
 
-const searchMock = vi.fn(async () => ({
+const searchMock = vi.fn(async (_request: { url: string; body?: unknown }) => ({
   searchResult: [
     {
       developerInfos: [
@@ -23,7 +23,8 @@ const searchMock = vi.fn(async () => ({
 }));
 
 vi.mock("../src/lib/fetch", () => ({
-  fetchHuaweiJson: (...args: unknown[]) => searchMock(...args),
+  fetchHuaweiJson: (request: { url: string; body?: unknown }) =>
+    searchMock(request),
   ValidationError: class ValidationError extends Error {},
 }));
 

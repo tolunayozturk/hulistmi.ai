@@ -35,9 +35,7 @@ export const FETCH_DOC_INPUT_SCHEMA = {
 };
 
 export const FETCH_CATALOG_INPUT_SCHEMA = {
-  catalogName: z
-    .enum([...SUPPORTED_CATALOGS] as [string, ...string[]])
-    .default("harmonyos-guides"),
+  catalogName: z.enum(SUPPORTED_CATALOGS).default("harmonyos-guides"),
   language: languageSchema,
   depth: z.number().int().min(1).optional(),
 };

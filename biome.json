@@ -9,5 +9,8 @@
     "rules": {
       "recommended": true
     }
+  },
+  "files": {
+    "includes": ["**", "!worker-configuration.d.ts"]
   }
 }

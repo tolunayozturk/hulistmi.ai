@@ -9,13 +9,13 @@ export type CatalogName =
   | "design-guides"
   | "best-practices";
 
-export const SUPPORTED_CATALOGS: readonly CatalogName[] = [
+export const SUPPORTED_CATALOGS = [
   "harmonyos-guides",
   "harmonyos-references",
   "harmonyos-releases",
   "design-guides",
   "best-practices",
-];
+] as const satisfies readonly [CatalogName, ...CatalogName[]];
 
 const SUPPORTED_CATALOGS_SET: ReadonlySet<CatalogName> = new Set(
   SUPPORTED_CATALOGS,

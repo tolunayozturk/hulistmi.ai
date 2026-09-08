@@ -58,7 +58,10 @@
     "prepublishOnly": "node scripts/sync-version.mjs",
     "lint": "biome check --formatter-enabled=false .",
     "check": "biome check --write .",
-    "check:ci": "biome check ."
+    "check:ci": "biome check .",
+    "version:packages": "changeset version && node scripts/sync-version.mjs",
+    "typecheck": "npm run cf-typegen && tsc --noEmit",
+    "build:check": "wrangler deploy --dry-run --outdir=.wrangler/dry-run"
   },
   "dependencies": {
     "@hono/mcp": "^0.1.2",
@@ -71,10 +74,14 @@
   },
   "devDependencies": {
     "@biomejs/biome": "2.2.2",
-    "@changesets/cli": "^2.29.5",
     "@changesets/changelog-github": "^0.5.1",
+    "@changesets/cli": "^2.29.5",
     "@cloudflare/vitest-pool-workers": "^0.12.18",
+    "@cloudflare/workers-types": "^4.20260702.1",
+    "@types/node": "^26.5.0",
     "@vitest/ui": "^3.2.4",
+    "domhandler": "^5.0.3",
+    "typescript": "^5.9.3",
     "vitest": "^3.2.4",
     "wrangler": "^4.32.0"
   }
