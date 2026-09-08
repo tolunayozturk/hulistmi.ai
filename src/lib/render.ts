@@ -259,5 +259,9 @@ export function renderDocumentMarkdown(
   const title = value.title || LABELS[language].untitled;
   const sourceUrl = generateHuaweiDocUrl(path, language);
   const body = htmlToMarkdown(value.content?.content ?? "");
-  return `---\ntitle: ${title}\nsource: ${sourceUrl}\ntimestamp: ${new Date().toISOString()}\ncategory: ${category}\nlanguage: ${language}\n---\n\n# ${title}\n\n${body}\n\n---\n\n*Extracted by [hulistmi.ai](${PUBLIC_ORIGIN}) - Making HarmonyOS docs AI-readable.*\n*This is unofficial content. Source documentation belongs to Huawei.*\n`;
+  // No timestamp in the body: the ETag is a digest of this string, so a clock reading
+  // here would change the ETag on every request for an unchanged page and make
+  // conditional requests and incremental indexing impossible. The retrieval time is
+  // served as the X-Retrieved-At response header instead.
+  return `---\ntitle: ${title}\nsource: ${sourceUrl}\ncategory: ${category}\nlanguage: ${language}\n---\n\n# ${title}\n\n${body}\n\n---\n\n*Extracted by [hulistmi.ai](${PUBLIC_ORIGIN}) - Making HarmonyOS docs AI-readable.*\n*This is unofficial content. Source documentation belongs to Huawei.*\n`;
 }

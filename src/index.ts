@@ -107,6 +107,7 @@ async function renderDocument(
   const bounded = assertRenderedMarkdownWithinLimit(content);
   setNoIndex(c, DOC_CACHE);
   c.header("Content-Location", sourceUrl);
+  c.header("X-Retrieved-At", new Date().toISOString());
   c.header("ETag", await sha256(bounded));
   if (wantsJson(c)) return c.json({ url: sourceUrl, content: bounded });
   return c.text(bounded, 200, {
