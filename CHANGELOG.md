@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.3.1
+
+### Patch Changes
+
+- Accept a Huawei documentation URL and a `/consumer/{en|cn}/doc/<catalog>/<path>` path in the `fetchHarmonyOSDocumentation` MCP tool, as `SKILL.md` describes.
+
+- Keep the document ETag when Huawei signs the image links again. The ETag changes when the text changes, and on the next day, when the image links expire.
+
 ## 1.3.0
 
 ### Minor Changes
