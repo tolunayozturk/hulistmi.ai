@@ -74,10 +74,14 @@ async function sha256(text: string): Promise<string> {
 }
 
 // Huawei signs each image URL anew on every request (HW-CC-Date, HW-CC-Sign), so the
-// same page differs byte for byte between fetches. The document ETag leaves the
-// signatures out, and is weak: equal tags mean the same content, not the same bytes.
+// same page differs byte for byte between fetches. The document ETag keeps only the
+// day of the signature: the links expire a day after signing, so a copy from an
+// earlier day must look out of date. The tag is weak: equal tags mean the same
+// content, not the same bytes.
 function withoutImageSignatures(markdown: string): string {
-  return markdown.replace(/(HW-CC-(?:Date|Sign))=[^&)\s]*/g, "$1=");
+  return markdown
+    .replace(/(HW-CC-Date=\d{8})[^&)\s]*/g, "$1")
+    .replace(/(HW-CC-Sign=)[^&)\s]*/g, "$1");
 }
 
 async function assertMcpBodyWithinLimit(

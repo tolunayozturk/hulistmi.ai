@@ -97,7 +97,9 @@ describe("document ETag", () => {
     return res.headers.get("ETag");
   };
 
-  it("stays the same when only the image signatures change, and changes with the text", async () => {
+  // The signed links expire after a day (HW-CC-Expire=86400), so a copy saved on an
+  // earlier day must look out of date even when the text is the same.
+  it("stays the same on the day the images were signed, and changes with the text or the day", async () => {
     const first = await etag(
       page(
         "20261008T183215Z",
@@ -119,9 +121,17 @@ describe("document ETag", () => {
         "Edited body",
       ),
     );
+    const nextDay = await etag(
+      page(
+        "20261009T001500Z",
+        "0F3A9C2B7E61D4485A0C9E7B21F6D3A8C5E09B4F7A2D6C1E8B3F5A0D9C7E2B4A",
+        "Body",
+      ),
+    );
 
     expect(first).toBeTruthy();
     expect(resigned).toBe(first);
     expect(edited).not.toBe(first);
+    expect(nextDay).not.toBe(first);
   });
 });
