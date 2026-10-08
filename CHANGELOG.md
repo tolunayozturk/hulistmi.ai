@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.3.0
+
+### Minor Changes
+
+- Present the origin of the deployment, not the hosted origin, in the document footer, on `/bot`, in the `User-Agent`, and on the static pages. A self-hosted deployment links to the hosted version. The `PUBLIC_ORIGIN` var and the `HULISTMI_PUBLIC_ORIGIN` environment variable override the origin.
+
+### Patch Changes
+
+- Remove the unused `zod-to-json-schema` dependency.
+
 ## 1.2.0
 
 ### Minor Changes

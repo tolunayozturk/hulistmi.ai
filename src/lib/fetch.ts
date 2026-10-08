@@ -1,6 +1,5 @@
-import { PUBLIC_ORIGIN } from "./origin";
+import { hulistmiUserAgent } from "./origin";
 import { UPSTREAM_CONTRACT } from "./upstream-contract";
-import { VERSION } from "./version";
 
 export class NotFoundError extends Error {}
 export class UpstreamPolicyError extends Error {}
@@ -8,7 +7,6 @@ export class UpstreamSizeError extends Error {}
 export class UpstreamTimeoutError extends Error {}
 export class ValidationError extends Error {}
 
-export const HULISTMI_USER_AGENT = `hulistmi-ai/${VERSION} (+${PUBLIC_ORIGIN}/bot)`;
 // The code Huawei returns, with HTTP 200, for a document that does not exist.
 const HUAWEI_DOCUMENT_NOT_FOUND = "92531031";
 export const UPSTREAM_TIMEOUT_MS = 10_000;
@@ -61,11 +59,14 @@ function isVerifiedHeaderValue(name: string, value: string): boolean {
   );
 }
 
-function verifiedHeaders(request: VerifiedHuaweiRequest): HeadersInit {
+function verifiedHeaders(
+  request: VerifiedHuaweiRequest,
+  origin: string | undefined,
+): HeadersInit {
   const headers = new Headers({
     "Content-Type": "application/json",
     Accept: "application/json",
-    "User-Agent": HULISTMI_USER_AGENT,
+    "User-Agent": hulistmiUserAgent(origin),
   });
   for (const [key, value] of Object.entries(request.headers ?? {})) {
     const lower = key.toLowerCase();
@@ -116,6 +117,7 @@ async function readCappedText(
 
 export async function fetchHuaweiJson<T>(
   request: VerifiedHuaweiRequest,
+  origin: string | undefined,
   maxBytes = MAX_UPSTREAM_RESPONSE_BYTES,
 ): Promise<T> {
   const verifiedUrl = assertAllowedHuaweiUrl(request.url);
@@ -126,7 +128,7 @@ export async function fetchHuaweiJson<T>(
   try {
     response = await fetch(verifiedUrl, {
       method: "POST",
-      headers: verifiedHeaders(request),
+      headers: verifiedHeaders(request, origin),
       body: JSON.stringify(request.body),
       signal: controller.signal,
     });

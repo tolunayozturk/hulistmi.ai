@@ -5,7 +5,7 @@ import {
 } from "./catalog-name";
 import { fetchHuaweiJson, NotFoundError, UpstreamSizeError } from "./fetch";
 import { LABELS } from "./labels";
-import { DEFAULT_LANGUAGE, type Language } from "./language";
+import type { Language } from "./language";
 import { UPSTREAM_CONTRACT } from "./upstream-contract";
 
 const MAX_CATALOG_ITEMS = 20_000;
@@ -25,7 +25,8 @@ export interface HarmonyCatalog {
 
 export async function fetchHarmonyOSCatalog(
   catalogName: CatalogName,
-  language: Language = DEFAULT_LANGUAGE,
+  language: Language,
+  origin: string | undefined,
 ): Promise<HarmonyCatalog> {
   if (!isCatalogName(catalogName))
     throw new NotFoundError("Unsupported HarmonyOS catalog");
@@ -41,7 +42,7 @@ export async function fetchHarmonyOSCatalog(
   const data = await fetchHuaweiJson<{
     code: number | string;
     value?: unknown;
-  }>(request, MAX_CATALOG_UPSTREAM_BYTES);
+  }>(request, origin, MAX_CATALOG_UPSTREAM_BYTES);
   if (data.code !== 0 && data.code !== "0")
     throw new Error("Huawei catalog response changed shape");
   const items = normalizeCatalogItems(data.value, language);

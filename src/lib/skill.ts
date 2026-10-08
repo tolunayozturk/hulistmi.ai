@@ -1,4 +1,5 @@
 import { HTTPException } from "hono/http-exception";
+import { fillPlaceholders } from "./static-pages";
 
 export const SKILL_NAME = "hulistmi";
 
@@ -22,15 +23,16 @@ export interface SkillArtifact {
 
 export async function loadSkill(
   assets: Fetcher,
-  baseUrl: string,
+  origin: string,
 ): Promise<SkillArtifact> {
   const skillResponse = await assets.fetch(
-    new Request(new URL("/SKILL.md", baseUrl).toString()),
+    new Request(new URL("/SKILL.md", origin).toString()),
   );
   if (!skillResponse.ok)
     throw new HTTPException(500, { message: "Failed to load SKILL.md" });
-  const bytes = await skillResponse.arrayBuffer();
-  const frontmatter = parseSkillFrontmatter(new TextDecoder().decode(bytes));
+  const text = fillPlaceholders(await skillResponse.text(), origin, "text");
+  const bytes = new TextEncoder().encode(text).buffer as ArrayBuffer;
+  const frontmatter = parseSkillFrontmatter(text);
   if (frontmatter.name !== SKILL_NAME)
     throw new HTTPException(500, {
       message: `Expected skill name "${SKILL_NAME}".`,
@@ -42,16 +44,6 @@ export async function loadSkill(
     description: frontmatter.description,
     name: frontmatter.name,
   };
-}
-
-export async function skillExists(
-  assets: Fetcher,
-  baseUrl: string,
-): Promise<boolean> {
-  const response = await assets.fetch(
-    new Request(new URL("/SKILL.md", baseUrl).toString(), { method: "HEAD" }),
-  );
-  return response.ok;
 }
 
 export async function createSkillIndex(skill: SkillArtifact) {

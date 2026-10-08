@@ -1,6 +1,6 @@
 import { TOOL_DEFINITIONS } from "./mcp";
 
-export function buildWebMcpManifest(origin = "https://hulistmi.ai") {
+export function buildWebMcpManifest(origin: string) {
   return {
     name: "hulistmi.ai",
     description: "AI-readable HarmonyOS documentation.",

@@ -4,7 +4,7 @@ import {
   NotFoundError,
   type VerifiedHuaweiRequest,
 } from "./fetch";
-import { DEFAULT_LANGUAGE, type Language } from "./language";
+import type { Language } from "./language";
 import type { HarmonyDocumentResponse, HarmonyDocumentValue } from "./types";
 import { UPSTREAM_CONTRACT } from "./upstream-contract";
 
@@ -48,7 +48,8 @@ const GET_CENTER_DOCUMENT_URL =
 export async function fetchHarmonyDocumentPageData(
   catalogName: CatalogName,
   path: string,
-  language: Language = DEFAULT_LANGUAGE,
+  language: Language,
+  origin: string | undefined,
 ): Promise<HarmonyDocumentValue> {
   const pinned = DOCUMENTS[documentKey(catalogName, path)];
   const entry = withLanguage(
@@ -58,6 +59,7 @@ export async function fetchHarmonyDocumentPageData(
 
   const grayResponse = await fetchHuaweiJson<GrayUserResponse>(
     entry.checkCenterGrayUser,
+    origin,
   );
   if (isCenterDocument(grayResponse)) {
     const centerRequests =
@@ -67,11 +69,11 @@ export async function fetchHarmonyDocumentPageData(
             getCenterDocument: entry.getCenterDocument,
           }
         : buildCenterRequests(grayResponse, path, language);
-    await fetchHuaweiJson(centerRequests.getCenterRootNodeTree);
-    return fetchAndValidateDocument(centerRequests.getCenterDocument);
+    await fetchHuaweiJson(centerRequests.getCenterRootNodeTree, origin);
+    return fetchAndValidateDocument(centerRequests.getCenterDocument, origin);
   }
 
-  return fetchAndValidateDocument(entry.getDocumentById);
+  return fetchAndValidateDocument(entry.getDocumentById, origin);
 }
 
 function withLanguage(
@@ -184,8 +186,12 @@ function buildCenterRequests(
 
 async function fetchAndValidateDocument(
   request: VerifiedHuaweiRequest,
+  origin: string | undefined,
 ): Promise<HarmonyDocumentValue> {
-  const response = await fetchHuaweiJson<HarmonyDocumentResponse>(request);
+  const response = await fetchHuaweiJson<HarmonyDocumentResponse>(
+    request,
+    origin,
+  );
   if (response.code !== 0 && response.code !== "0")
     throw new Error("HarmonyOS document response changed shape");
   if (
