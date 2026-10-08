@@ -46,16 +46,6 @@ export async function loadSkill(
   };
 }
 
-export async function skillExists(
-  assets: Fetcher,
-  baseUrl: string,
-): Promise<boolean> {
-  const response = await assets.fetch(
-    new Request(new URL("/SKILL.md", baseUrl).toString(), { method: "HEAD" }),
-  );
-  return response.ok;
-}
-
 export async function createSkillIndex(skill: SkillArtifact) {
   return {
     $schema: "https://schemas.agentskills.io/discovery/0.2.0/schema.json",
