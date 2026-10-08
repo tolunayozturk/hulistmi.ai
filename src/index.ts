@@ -73,6 +73,13 @@ async function sha256(text: string): Promise<string> {
     .join("")}"`;
 }
 
+// Huawei signs each image URL anew on every request (HW-CC-Date, HW-CC-Sign), so the
+// same page differs byte for byte between fetches. The document ETag leaves the
+// signatures out, and is weak: equal tags mean the same content, not the same bytes.
+function withoutImageSignatures(markdown: string): string {
+  return markdown.replace(/(HW-CC-(?:Date|Sign))=[^&)\s]*/g, "$1=");
+}
+
 async function assertMcpBodyWithinLimit(
   request: Request,
 ): Promise<Response | null> {
@@ -121,7 +128,7 @@ async function renderDocument(
   setNoIndex(c, DOC_CACHE);
   c.header("Content-Location", sourceUrl);
   c.header("X-Retrieved-At", new Date().toISOString());
-  c.header("ETag", await sha256(bounded));
+  c.header("ETag", `W/${await sha256(withoutImageSignatures(bounded))}`);
   if (wantsJson(c)) return c.json({ url: sourceUrl, content: bounded });
   return c.text(bounded, 200, {
     "Content-Type": "text/markdown; charset=utf-8",

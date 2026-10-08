@@ -82,3 +82,46 @@ describe("fetchHarmonyOSDocumentation", () => {
     });
   }
 });
+
+describe("document ETag", () => {
+  // Huawei signs each image URL anew on every request. Seen live on 2026-10-08 for
+  // harmonyos-guides/start-overview: two fetches two minutes apart differed only here.
+  const page = (date: string, sign: string, text: string) =>
+    `<p>${text}</p><p><img src="https://contentcenter-vali-drcn.dbankcdn.cn/pvt_2/DeveloperAlliance_scene_100_1/6c/v3/zDM-pmO8RwqVGrwwFuu1uQ/en-us_image_0000002750162136.png?HW-CC-KV=V1&HW-CC-Date=${date}&HW-CC-Expire=86400&HW-CC-Sign=${sign}"></p>`;
+  const etag = async (html: string) => {
+    huaweiServes(html);
+    const res = await request(
+      "/consumer/en/doc/harmonyos-guides/start-overview",
+    );
+    expect(res.status).toBe(200);
+    return res.headers.get("ETag");
+  };
+
+  it("stays the same when only the image signatures change, and changes with the text", async () => {
+    const first = await etag(
+      page(
+        "20261008T183215Z",
+        "D52EA2FEF02A9EE01F1339C20FFDCB52546643E0505FC1FB1E02F05E4313CD90",
+        "Body",
+      ),
+    );
+    const resigned = await etag(
+      page(
+        "20261008T183550Z",
+        "783C62D8581F05BADFDF6B31C84950E3D7D98E54E96BB3742A291F3B0DD79EF5",
+        "Body",
+      ),
+    );
+    const edited = await etag(
+      page(
+        "20261008T183550Z",
+        "783C62D8581F05BADFDF6B31C84950E3D7D98E54E96BB3742A291F3B0DD79EF5",
+        "Edited body",
+      ),
+    );
+
+    expect(first).toBeTruthy();
+    expect(resigned).toBe(first);
+    expect(edited).not.toBe(first);
+  });
+});
