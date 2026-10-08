@@ -7,7 +7,7 @@ import { fetchAndRenderCatalogPage } from "./generic";
 import { DEFAULT_LANGUAGE } from "./language";
 import { renderSearchMarkdown, searchHarmonyOSDocs } from "./search";
 import { UPSTREAM_CONTRACT } from "./upstream-contract";
-import { splitDocsPath } from "./url";
+import { parseDocsInput, splitDocsPath } from "./url";
 import { VERSION } from "./version";
 
 export const MCP_SERVER_INFO = {
@@ -48,7 +48,7 @@ export const TOOL_DEFINITIONS = {
   },
   fetchHarmonyOSDocumentation: {
     description:
-      "Fetch a HarmonyOS documentation page as Markdown. Pass language=cn to fetch the Chinese version.",
+      "Fetch a HarmonyOS documentation page as Markdown. Name the page with a Huawei documentation URL, a /consumer/{en|cn}/doc/<catalog>/<path> path, or <catalog>/<path>. A URL or /consumer path sets the language; with <catalog>/<path>, pass language=cn for the Chinese version.",
     http: { path: "/{path}", query: {} },
   },
   fetchHarmonyOSCatalog: {
@@ -97,12 +97,14 @@ export function createMcpServer(origin: string): McpServer {
       annotations: readOnlyAnnotations,
     },
     async ({ path, language }) => {
-      const normalized = path.replace(/^\/+/, "");
-      const { catalogName, pagePath } = splitDocsPath(normalized);
+      // A URL or /consumer/{en|cn}/doc/ path names the language; `language` is for
+      // a bare <catalog>/<path>.
+      const page = parseDocsInput(path);
+      const { catalogName, pagePath } = splitDocsPath(page.path);
       const { content } = await fetchAndRenderCatalogPage(
         catalogName,
         pagePath,
-        language,
+        page.language ?? language,
         origin,
       );
       return {
