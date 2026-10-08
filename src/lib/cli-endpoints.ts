@@ -1,6 +1,6 @@
 import { ValidationError } from "./fetch";
 import type { Language } from "./language";
-import { huaweiUrlLanguage, huaweiUrlToPath, normalizeDocsPath } from "./url";
+import { parseDocsInput } from "./url";
 
 export type CliCommand =
   | {
@@ -12,8 +12,6 @@ export type CliCommand =
   | { command: "search"; query: string; language: Language; json: boolean }
   | { command: "serve"; port?: number };
 
-const SUPPORTED_LANG_PREFIXES = ["consumer/en/doc/", "consumer/cn/doc/"];
-
 export interface ResolvedFetchEndpoint {
   path: string;
   language: Language;
@@ -22,21 +20,12 @@ export interface ResolvedFetchEndpoint {
 export function resolveFetchEndpoint(input: string): ResolvedFetchEndpoint {
   const trimmed = input.trim();
   if (!trimmed) throw new ValidationError("Fetch input cannot be empty");
-  let path: string;
-  let language: Language;
-  if (/^https?:\/\//i.test(trimmed)) {
-    path = huaweiUrlToPath(trimmed);
-    language = huaweiUrlLanguage(trimmed);
-  } else {
-    const stripped = normalizeDocsPath(trimmed);
-    const prefix = SUPPORTED_LANG_PREFIXES.find((p) => stripped.startsWith(p));
-    if (!prefix)
-      throw new ValidationError(
-        `Input must be a full Huawei doc URL or /consumer/{en|cn}/doc/<catalog>/<path> — got: ${input}`,
-      );
-    path = stripped.slice(prefix.length);
-    language = prefix === "consumer/cn/doc/" ? "cn" : "en";
-  }
+  // The CLI takes no --language for fetch, so the input must carry the language.
+  const { path, language } = parseDocsInput(trimmed);
+  if (!language)
+    throw new ValidationError(
+      `Input must be a full Huawei doc URL or /consumer/{en|cn}/doc/<catalog>/<path> — got: ${input}`,
+    );
   return { path, language };
 }
 

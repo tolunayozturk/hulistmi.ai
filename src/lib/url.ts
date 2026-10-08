@@ -66,6 +66,26 @@ export function huaweiUrlLanguage(input: string): Language {
   return match.lang;
 }
 
+/**
+ * Reads a page named by a Huawei documentation URL or a /consumer/{en|cn}/doc/ path,
+ * which also give the language, or by a bare <catalog>/<path>, which does not.
+ */
+export function parseDocsInput(input: string): {
+  path: string;
+  language?: Language;
+} {
+  const trimmed = input.trim();
+  if (/^https?:\/\//i.test(trimmed))
+    return {
+      path: huaweiUrlToPath(trimmed),
+      language: huaweiUrlLanguage(trimmed),
+    };
+  const match = matchDocPrefix(`/${normalizeDocsPath(trimmed)}`);
+  if (match)
+    return { path: normalizeDocsPath(match.rest), language: match.lang };
+  return { path: normalizeDocsPath(trimmed) };
+}
+
 export function splitDocsPath(path: string): {
   catalogName: CatalogName;
   pagePath: string;
