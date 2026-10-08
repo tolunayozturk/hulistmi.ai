@@ -18,8 +18,7 @@
           "catalogName": "harmonyos-guides",
           "showHide": "1"
         }
-      },
-      "responseHeaders": { "content-type": "application/json" }
+      }
     },
     "harmonyos-references": {
       "request": {
@@ -29,8 +28,7 @@
           "catalogName": "harmonyos-references",
           "showHide": "1"
         }
-      },
-      "responseHeaders": { "content-type": "application/json" }
+      }
     },
     "harmonyos-releases": {
       "request": {
@@ -40,8 +38,7 @@
           "catalogName": "harmonyos-releases",
           "showHide": "1"
         }
-      },
-      "responseHeaders": { "content-type": "application/json" }
+      }
     },
     "design-guides": {
       "request": {
@@ -51,8 +48,7 @@
           "catalogName": "design-guides",
           "showHide": "1"
         }
-      },
-      "responseHeaders": { "content-type": "application/json" }
+      }
     },
     "best-practices": {
       "request": {
@@ -62,8 +58,7 @@
           "catalogName": "best-practices",
           "showHide": "1"
         }
-      },
-      "responseHeaders": { "content-type": "application/json" }
+      }
     },
     "harmonyos-faqs": {
       "request": {
@@ -73,8 +68,7 @@
           "catalogName": "harmonyos-faqs",
           "showHide": "1"
         }
-      },
-      "responseHeaders": { "content-type": "application/json" }
+      }
     }
   },
   "documents": {
@@ -122,7 +116,6 @@
   "search": {
     "url": "https://svc-drcn.developer.huawei.com/community/servlet/consumer/partnerCommunityService/developer/search",
     "headers": {},
-    "responseHeaders": { "content-type": "application/json" },
     "searchBodyTemplate": {
       "deviceId": "ESN",
       "deviceType": "1",
@@ -134,7 +127,6 @@
       "developerVertical": { "categoryList": [1] }
     },
     "maxQueryLength": 120,
-    "defaultLength": 20,
     "maxLength": 20
   }
 }
