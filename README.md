@@ -181,6 +181,18 @@ at [`hulistmi-ai.y6vd2dkjgb.workers.dev`](https://hulistmi-ai.y6vd2dkjgb.workers
 > See the [Hono docs](https://hono.dev/docs/getting-started/basic)
 > for more information about deploying to different platforms.
 
+### Deployment identity
+
+A deployment presents its origin in the document footer, on `/bot`, and in the
+outgoing `User-Agent`. By default, this is the origin that serves the request, so a
+self-hosted Worker identifies itself with no configuration. Its footer and `/bot`
+page also link to the hosted version.
+
+Set the `PUBLIC_ORIGIN` var when the request origin is not the public one, for
+example behind a proxy. The CLI presents no origin unless you set
+`HULISTMI_PUBLIC_ORIGIN`. Both must be http or https URLs. Any other value stops the
+Worker or the CLI with an error.
+
 ### Prerequisites
 
 - Node.js 20.18.1+

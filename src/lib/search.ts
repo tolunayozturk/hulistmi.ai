@@ -1,6 +1,6 @@
 import { fetchHuaweiJson, ValidationError } from "./fetch";
 import { LABELS } from "./labels";
-import { DEFAULT_LANGUAGE, type Language } from "./language";
+import type { Language } from "./language";
 import { UPSTREAM_CONTRACT } from "./upstream-contract";
 import { resolveHuaweiDocUrl } from "./url";
 
@@ -50,17 +50,21 @@ function buildSearchBody(query: string, language: Language): unknown {
 
 export async function searchHarmonyOSDocs(
   query: string,
-  language: Language = DEFAULT_LANGUAGE,
+  language: Language,
+  origin: string | undefined,
 ): Promise<SearchResponse> {
   const trimmed = query.trim();
   if (!trimmed) throw new ValidationError("Search query is required");
   if (trimmed.length > UPSTREAM_CONTRACT.search.maxQueryLength)
     throw new ValidationError("Search query is too long");
-  const data = await fetchHuaweiJson<HuaweiSearchResponse>({
-    url: UPSTREAM_CONTRACT.search.url,
-    headers: UPSTREAM_CONTRACT.search.headers,
-    body: buildSearchBody(trimmed, language),
-  });
+  const data = await fetchHuaweiJson<HuaweiSearchResponse>(
+    {
+      url: UPSTREAM_CONTRACT.search.url,
+      headers: UPSTREAM_CONTRACT.search.headers,
+      body: buildSearchBody(trimmed, language),
+    },
+    origin,
+  );
   return {
     query: trimmed,
     language,

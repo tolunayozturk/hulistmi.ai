@@ -45,7 +45,11 @@ describe("HarmonyOS catalog", () => {
       },
     });
 
-    const catalog = await fetchHarmonyOSCatalog("harmonyos-guides");
+    const catalog = await fetchHarmonyOSCatalog(
+      "harmonyos-guides",
+      "en",
+      "https://example.com",
+    );
 
     expect(catalog).toEqual(expect.objectContaining({ language: "en" }));
     expect(mockedFetchHuaweiJson.mock.calls[0][0].body).toMatchObject({
@@ -73,7 +77,11 @@ describe("HarmonyOS catalog", () => {
       value: { catalogTreeList: [] },
     });
 
-    const catalog = await fetchHarmonyOSCatalog("harmonyos-guides", "cn");
+    const catalog = await fetchHarmonyOSCatalog(
+      "harmonyos-guides",
+      "cn",
+      "https://example.com",
+    );
 
     expect(catalog.language).toBe("cn");
     expect(mockedFetchHuaweiJson.mock.calls[0][0].body).toMatchObject({

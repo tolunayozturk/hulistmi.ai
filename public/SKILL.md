@@ -5,7 +5,7 @@ description: Use when fetching or searching HarmonyOS developer documentation in
 
 # hulistmi
 
-Use hulistmi-ai.y6vd2dkjgb.workers.dev to fetch and search HarmonyOS developer documentation in AI-readable Markdown.
+Use hulistmi.ai at {{ORIGIN}} to fetch and search HarmonyOS developer documentation in AI-readable Markdown.{{HOSTED_NOTE}}
 
 Both English (`en`, default) and Chinese (`cn`) documentation are supported. For `fetchHarmonyOSDocumentation`, use the `/consumer/{en|cn}/doc/<catalog>/<path>` prefix to pick the language. For `fetchHarmonyOSCatalog` and `searchHarmonyOSDocumentation`, pass `language=cn` to receive Chinese content.
 

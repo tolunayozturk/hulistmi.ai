@@ -65,7 +65,7 @@ export const TOOL_DEFINITIONS = {
   },
 } as const;
 
-export function createMcpServer(): McpServer {
+export function createMcpServer(origin: string): McpServer {
   const server = new McpServer(MCP_SERVER_INFO);
   server.registerTool(
     "searchHarmonyOSDocumentation",
@@ -80,7 +80,9 @@ export function createMcpServer(): McpServer {
         {
           type: "text",
           text: assertRenderedMarkdownWithinLimit(
-            renderSearchMarkdown(await searchHarmonyOSDocs(query, language)),
+            renderSearchMarkdown(
+              await searchHarmonyOSDocs(query, language, origin),
+            ),
           ),
         },
       ],
@@ -101,6 +103,7 @@ export function createMcpServer(): McpServer {
         catalogName,
         pagePath,
         language,
+        origin,
       );
       return {
         content: [
@@ -123,7 +126,7 @@ export function createMcpServer(): McpServer {
           type: "text",
           text: assertRenderedMarkdownWithinLimit(
             renderCatalogMarkdown(
-              await fetchHarmonyOSCatalog(catalogName, language),
+              await fetchHarmonyOSCatalog(catalogName, language, origin),
               depth,
             ),
           ),

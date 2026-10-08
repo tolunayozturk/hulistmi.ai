@@ -34,14 +34,18 @@ describe("HarmonyOS search", () => {
   });
 
   it("validates query length and normalizes results", async () => {
-    await expect(searchHarmonyOSDocs("")).rejects.toThrow(
-      "Search query is required",
-    );
-    await expect(searchHarmonyOSDocs("x".repeat(121))).rejects.toThrow(
-      "Search query is too long",
-    );
+    await expect(
+      searchHarmonyOSDocs("", "en", "https://example.com"),
+    ).rejects.toThrow("Search query is required");
+    await expect(
+      searchHarmonyOSDocs("x".repeat(121), "en", "https://example.com"),
+    ).rejects.toThrow("Search query is too long");
 
-    const result = await searchHarmonyOSDocs("UIAbility");
+    const result = await searchHarmonyOSDocs(
+      "UIAbility",
+      "en",
+      "https://example.com",
+    );
     expect(result.query).toBe("UIAbility");
     expect(result.language).toBe("en");
     expect(result.results[0]).toMatchObject({
@@ -56,7 +60,11 @@ describe("HarmonyOS search", () => {
   });
 
   it("threads language=cn into the upstream body (top-level only; developerVertical.language stays 'en' as the populated vertical)", async () => {
-    const result = await searchHarmonyOSDocs("UIAbility", "cn");
+    const result = await searchHarmonyOSDocs(
+      "UIAbility",
+      "cn",
+      "https://example.com",
+    );
     expect(result.language).toBe("cn");
     expect(searchMock.mock.calls[0][0].body).toMatchObject({
       language: "cn",
@@ -67,7 +75,11 @@ describe("HarmonyOS search", () => {
   });
 
   it("normalizes protocol-relative URLs (//host) to absolute https", async () => {
-    const result = await searchHarmonyOSDocs("UIAbility");
+    const result = await searchHarmonyOSDocs(
+      "UIAbility",
+      "en",
+      "https://example.com",
+    );
     expect(result.results[1].url).toBe(
       "https://developer.huawei.com/consumer/en/doc/x",
     );
