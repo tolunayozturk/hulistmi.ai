@@ -58,7 +58,14 @@ export async function main(argv = process.argv.slice(2)): Promise<void> {
       );
       process.exit(1);
     });
-    child.on("exit", (code) => process.exit(code ?? 0));
+    // Same as the launcher: pass on SIGTERM, and exit as the child did.
+    const forward = () => child.kill("SIGTERM");
+    process.on("SIGTERM", forward);
+    child.on("exit", (code, signal) => {
+      if (!signal) process.exit(code ?? 1);
+      process.off("SIGTERM", forward);
+      process.kill(process.pid, signal);
+    });
     return;
   }
 }
