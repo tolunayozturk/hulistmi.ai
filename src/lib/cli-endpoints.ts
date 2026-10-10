@@ -9,8 +9,7 @@ export type CliCommand =
       language: Language;
       json: boolean;
     }
-  | { command: "search"; query: string; language: Language; json: boolean }
-  | { command: "serve"; port?: number };
+  | { command: "search"; query: string; language: Language; json: boolean };
 
 export interface ResolvedFetchEndpoint {
   path: string;
@@ -59,15 +58,21 @@ export function parseCliArgs(argv: string[]): CliCommand {
 
   let language: Language | undefined;
 
+  // Validate before warning, so the warning never echoes an unchecked value.
+  function setLanguage(flag: string, raw: string): void {
+    const parsed = parseLanguageValue(raw);
+    if (language !== undefined)
+      process.stderr.write(
+        `warning: ${flag} ${parsed} overrides earlier --language/-l\n`,
+      );
+    language = parsed;
+  }
+
   function takeValueFlag(flag: string, index: number): number {
     const next = jsonStripped[index + 1];
     if (next === undefined || next.startsWith("-"))
       throw new ValidationError(`Flag ${flag} requires a value`);
-    if (language !== undefined)
-      process.stderr.write(
-        `warning: ${flag} ${next} overrides earlier --language/-l\n`,
-      );
-    language = parseLanguageValue(next);
+    setLanguage(flag, next);
     return 2;
   }
 
@@ -85,11 +90,7 @@ export function parseCliArgs(argv: string[]): CliCommand {
         const value = token.slice(equalIdx + 1);
         if (value === "")
           throw new ValidationError(`Flag ${name}= requires a value`);
-        if (language !== undefined)
-          process.stderr.write(
-            `warning: ${name}=${value} overrides earlier --language/-l\n`,
-          );
-        language = parseLanguageValue(value);
+        setLanguage(name, value);
         i += 1;
         continue;
       }
@@ -120,12 +121,7 @@ export function parseCliArgs(argv: string[]): CliCommand {
       throw new ValidationError("Usage: hulistmi search <query> [--json]");
     return { command, query, language: language ?? "en", json };
   }
-  if (command === "serve") {
-    const portFlag = remaining.indexOf("--port");
-    const port = portFlag >= 0 ? Number(remaining[portFlag + 1]) : undefined;
-    return { command, port };
-  }
   throw new ValidationError(
-    "Usage: hulistmi fetch <url-or-path> [--json] | hulistmi search <query> [--language en|cn] [--json] | hulistmi serve [--port 8787]",
+    "Usage: hulistmi fetch <url-or-path> [--json] | hulistmi search <query> [--language en|cn] [--json]",
   );
 }

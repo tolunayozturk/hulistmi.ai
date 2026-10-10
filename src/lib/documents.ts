@@ -7,6 +7,7 @@ import {
 import type { Language } from "./language";
 import type { HarmonyDocumentResponse, HarmonyDocumentValue } from "./types";
 import { UPSTREAM_CONTRACT } from "./upstream-contract";
+import { trimSlashes } from "./url";
 
 interface DocumentContractEntry {
   checkCenterGrayUser: VerifiedHuaweiRequest;
@@ -137,7 +138,7 @@ function buildEntry(
 }
 
 function normalizeDocumentSlug(path: string): string {
-  return path.replace(/^\/+/, "").replace(/\/+$/, "").toLowerCase();
+  return trimSlashes(path).toLowerCase();
 }
 
 function isCenterDocument(response: GrayUserResponse): boolean {
