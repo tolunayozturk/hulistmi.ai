@@ -11,11 +11,19 @@ const cliPath = resolve(packageRoot, "src/cli.ts");
 const child = spawn(
   process.execPath,
   ["--import", "tsx/esm", cliPath, ...process.argv.slice(2)],
-  {
-    cwd: packageRoot,
-    stdio: "inherit",
-    shell: process.platform === "win32",
-  },
+  // No shell: process.execPath is node itself. On Windows a shell joins the
+  // arguments into a cmd.exe line unescaped, so a URL with "&" would run commands.
+  { cwd: packageRoot, stdio: "inherit" },
 );
 
-child.on("exit", (code) => process.exit(code ?? 0));
+// A supervisor's SIGTERM reaches only this process; pass it on so the CLI does
+// not outlive it. Ctrl-C and hangup already reach the whole process group.
+const forward = () => child.kill("SIGTERM");
+process.on("SIGTERM", forward);
+
+// Exit as the child did: a child killed by a signal is not a success.
+child.on("exit", (code, signal) => {
+  if (!signal) process.exit(code ?? 1);
+  process.off("SIGTERM", forward);
+  process.kill(process.pid, signal);
+});

@@ -139,16 +139,18 @@ async function renderDocument(
   });
 }
 
-async function publicLimit(c: Context, next: () => Promise<void>) {
-  const blocked = await enforceRateLimit(c.req.raw, c.env);
-  if (blocked) return blocked;
-  await next();
+function publicLimit(route: string) {
+  return async (c: Context, next: () => Promise<void>) => {
+    const blocked = await enforceRateLimit(c.req.raw, c.env, route);
+    if (blocked) return blocked;
+    await next();
+  };
 }
 
-app.use("/search", publicLimit);
-app.use("/catalog", publicLimit);
-app.use("/mcp", publicLimit);
-app.use("/consumer/:lang/doc/*", publicLimit);
+app.use("/search", publicLimit("search"));
+app.use("/catalog", publicLimit("catalog"));
+app.use("/mcp", publicLimit("mcp"));
+app.use("/consumer/:lang/doc/*", publicLimit("consumer"));
 
 // Served through the Worker, not straight from the assets, so each deployment names
 // itself in them. The asset's ETag and length describe the unfilled file, so they are
@@ -277,9 +279,43 @@ async function serveSkill(c: Context): Promise<Response> {
 app.get("/SKILL.md", serveSkill);
 app.get(`/.well-known/agent-skills/${SKILL_NAME}/SKILL.md`, serveSkill);
 
+// Each request gets a new server, so nothing could ever write to a stream opened
+// by GET. The transport spec says a server without one answers 405.
+app.get("/mcp", (c) =>
+  c.json(
+    {
+      jsonrpc: "2.0",
+      error: { code: -32000, message: "Method not allowed" },
+      id: null,
+    },
+    405,
+    { Allow: "POST, DELETE", "Cache-Control": "no-store" },
+  ),
+);
+
 app.all("/mcp", async (c) => {
   const tooLarge = await assertMcpBodyWithinLimit(c.req.raw);
   if (tooLarge) return tooLarge;
+  // The rate limit counts requests, so a request carries one message: the
+  // transport would run every call in a JSON-RPC batch. MCP 2025-06-18 removed
+  // batching. The body is cached, so the transport reads it again; a body that is
+  // not JSON is left for the transport to reject.
+  if (c.req.method === "POST") {
+    const body = await c.req.json().catch(() => undefined);
+    if (Array.isArray(body))
+      return c.json(
+        {
+          jsonrpc: "2.0",
+          error: {
+            code: -32600,
+            message: "JSON-RPC batches are not supported",
+          },
+          id: null,
+        },
+        400,
+        { "Cache-Control": "no-store" },
+      );
+  }
   const mcpServer = createMcpServer(origin(c));
   const transport = new StreamableHTTPTransport();
   await mcpServer.connect(transport);

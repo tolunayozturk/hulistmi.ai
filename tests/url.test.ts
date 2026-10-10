@@ -14,6 +14,12 @@ describe("HarmonyOS URL utilities", () => {
     expect(normalizeDocsPath("/harmonyos-guides/start-overview/")).toBe(
       "harmonyos-guides/start-overview",
     );
+    expect(normalizeDocsPath("//")).toBe("");
+    // A caller controls this string, so a long run of inner slashes must cost
+    // linear time. A quadratic trim takes about 25 s here and hits the test
+    // timeout (workerd freezes clocks during CPU work, so time is not measured).
+    const inner = `a${"/".repeat(200_000)}b`;
+    expect(normalizeDocsPath(`/${inner}/`)).toBe(inner);
     expect(
       splitDocsPath("harmonyos-references/js-apis-app-ability-uiability"),
     ).toEqual({

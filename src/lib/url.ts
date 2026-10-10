@@ -5,7 +5,17 @@ import { DEFAULT_LANGUAGE, docPrefix, type Language } from "./language";
 export const HUAWEI_DOC_ORIGIN = "https://developer.huawei.com";
 
 export function normalizeDocsPath(path: string): string {
-  return path.trim().replace(/^\/+/, "").replace(/\/+$/, "");
+  return trimSlashes(path.trim());
+}
+
+// A loop, not /\/+$/: callers pass untrusted strings, and that regex takes
+// quadratic time on a long run of slashes followed by another character.
+export function trimSlashes(path: string): string {
+  let start = 0;
+  let end = path.length;
+  while (start < end && path[start] === "/") start++;
+  while (end > start && path[end - 1] === "/") end--;
+  return path.slice(start, end);
 }
 
 function matchDocPrefix(

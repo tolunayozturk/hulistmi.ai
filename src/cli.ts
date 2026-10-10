@@ -1,8 +1,9 @@
-import { spawn } from "node:child_process";
+import { pathToFileURL } from "node:url";
 import { parseCliArgs, resolveFetchEndpoint } from "./lib/cli-endpoints";
 import { fetchAndRenderCatalogPage } from "./lib/generic";
 import { parsePublicOrigin } from "./lib/origin";
 import { renderSearchMarkdown, searchHarmonyOSDocs } from "./lib/search";
+import { terminalSafe, terminalSafeJson } from "./lib/terminal";
 import { splitDocsPath } from "./lib/url";
 
 export async function main(argv = process.argv.slice(2)): Promise<void> {
@@ -15,8 +16,8 @@ export async function main(argv = process.argv.slice(2)): Promise<void> {
   if (args.command === "search") {
     const result = await searchHarmonyOSDocs(args.query, args.language, origin);
     const output = args.json
-      ? JSON.stringify(result, null, 2)
-      : renderSearchMarkdown(result);
+      ? terminalSafeJson(result)
+      : terminalSafe(renderSearchMarkdown(result));
     process.stdout.write(`${output}\n`);
     return;
   }
@@ -30,33 +31,24 @@ export async function main(argv = process.argv.slice(2)): Promise<void> {
       origin,
     );
     const output = args.json
-      ? JSON.stringify({ url: sourceUrl, content }, null, 2)
-      : content;
+      ? terminalSafeJson({ url: sourceUrl, content })
+      : terminalSafe(content);
     process.stdout.write(`${output}\n`);
-    return;
-  }
-  if (args.command === "serve") {
-    const child = spawn(
-      "npm",
-      [
-        "run",
-        "dev",
-        "--",
-        "--port",
-        String(args.port ?? 8787),
-        ...(origin ? ["--var", `PUBLIC_ORIGIN:${origin}`] : []),
-      ],
-      { stdio: "inherit" },
-    );
-    child.on("exit", (code) => process.exit(code ?? 0));
     return;
   }
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+// pathToFileURL, not `file://${path}`: the URL percent-encodes spaces and uses
+// forward slashes, so a plain string never matches on Windows or in a path with
+// a space, and the CLI would exit without doing anything.
+if (
+  process.argv[1] &&
+  import.meta.url === pathToFileURL(process.argv[1]).href
+) {
   main().catch((error) => {
     console.error(
-      `hulistmi: ${error instanceof Error ? error.message : String(error)}`,
+      // A parse error can quote the upstream body.
+      `hulistmi: ${terminalSafe(error instanceof Error ? error.message : String(error))}`,
     );
     process.exit(1);
   });

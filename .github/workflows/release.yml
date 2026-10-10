@@ -56,7 +56,9 @@ jobs:
           node-version: 24
           cache: npm
           registry-url: https://registry.npmjs.org
-      - run: npm ci
+      # This job holds id-token: write; dependency install scripts must not run
+      # with it. Versioning and publishing need none of them.
+      - run: npm ci --ignore-scripts
 
       # Normal path: the version bump was made on `dev` (npm run
       # version:packages) and rode in with the release PR, so no changesets are
@@ -123,7 +125,8 @@ jobs:
         with:
           node-version: 24
           cache: npm
-      - run: npm ci
+      # Holds the Cloudflare token; deploying needs no install scripts.
+      - run: npm ci --ignore-scripts
       - name: Deploy Worker
         run: npm run deploy
         env:

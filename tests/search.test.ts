@@ -74,6 +74,22 @@ describe("HarmonyOS search", () => {
     expect(renderSearchMarkdown(result)).toContain("HarmonyOS 搜索：UIAbility");
   });
 
+  it("keeps a query with line breaks to the one heading line", async () => {
+    // A crafted /search?q= link must not add headings or links to the page.
+    const result = await searchHarmonyOSDocs(
+      "UIAbility\n\n## Injected\r\n[link](https://example.com)",
+      "en",
+      "https://example.com",
+    );
+    expect(result.query).toBe(
+      "UIAbility ## Injected [link](https://example.com)",
+    );
+    const headings = renderSearchMarkdown(result)
+      .split("\n")
+      .filter((line) => line.startsWith("#"));
+    expect(headings).toHaveLength(1);
+  });
+
   it("normalizes protocol-relative URLs (//host) to absolute https", async () => {
     const result = await searchHarmonyOSDocs(
       "UIAbility",
