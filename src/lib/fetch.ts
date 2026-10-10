@@ -130,6 +130,10 @@ export async function fetchHuaweiJson<T>(
       method: "POST",
       headers: verifiedHeaders(request, origin),
       body: JSON.stringify(request.body),
+      // The allowlist checks only this URL, so a redirect must not take the
+      // request to another one. A 3xx comes back as is and fails the ok check
+      // below. Workers do not support "error".
+      redirect: "manual",
       signal: controller.signal,
     });
   } catch (error) {
