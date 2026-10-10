@@ -50,6 +50,14 @@ export async function main(argv = process.argv.slice(2)): Promise<void> {
       ],
       { stdio: "inherit" },
     );
+    // Without this, a failed spawn (npm is npm.cmd on Windows, which spawn
+    // without a shell cannot run) is an unhandled 'error' event with a stack.
+    child.on("error", (error) => {
+      console.error(
+        `hulistmi: cannot start the dev server (${terminalSafe(error.message)}). Run \`npm run dev\` in a clone of the repository.`,
+      );
+      process.exit(1);
+    });
     child.on("exit", (code) => process.exit(code ?? 0));
     return;
   }
