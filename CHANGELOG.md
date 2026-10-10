@@ -1,5 +1,35 @@
 # Changelog
 
+## 1.4.0
+
+### Minor Changes
+
+- Remove the `hulistmi serve` command. It worked only in a clone of the repository, where `npm run dev` does the same.
+
+### Patch Changes
+
+- Run the CLI when the install path has a space, and on Windows. Before, the CLI stopped without output.
+
+- Show only a valid value in a `--language` warning.
+
+- Start the CLI without a shell on Windows. Before, characters such as `&` in a URL or a search query ran as commands.
+
+- Pass SIGTERM to the CLI process, and report a process that a signal stops as a failure.
+
+- Show control characters from Huawei content as U+FFFD in CLI output, so the content cannot change the terminal.
+
+- Refuse a JSON-RPC batch on `/mcp`. Before, one request carried many tool calls but counted as one request against the rate limit.
+
+- Answer `GET /mcp` with 405. Before, the request opened an event stream that the server did not use.
+
+- Do not follow a redirect from the Huawei API.
+
+- Count each spelling of a route path in one rate-limit bucket. Before, a percent-encoded path such as `/%73earch` got a new bucket.
+
+- Keep a search query on one line in the Markdown heading.
+
+- Trim slashes from a page path in linear time. Before, a path with a long run of slashes used much CPU.
+
 ## 1.3.1
 
 ### Patch Changes
