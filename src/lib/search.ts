@@ -53,7 +53,9 @@ export async function searchHarmonyOSDocs(
   language: Language,
   origin: string | undefined,
 ): Promise<SearchResponse> {
-  const trimmed = query.trim();
+  // One line: the query goes into a Markdown heading, where a line break would
+  // let a crafted link add headings or links to the page.
+  const trimmed = query.trim().replace(/\s+/g, " ");
   if (!trimmed) throw new ValidationError("Search query is required");
   if (trimmed.length > UPSTREAM_CONTRACT.search.maxQueryLength)
     throw new ValidationError("Search query is too long");
