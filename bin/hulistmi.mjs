@@ -11,11 +11,9 @@ const cliPath = resolve(packageRoot, "src/cli.ts");
 const child = spawn(
   process.execPath,
   ["--import", "tsx/esm", cliPath, ...process.argv.slice(2)],
-  {
-    cwd: packageRoot,
-    stdio: "inherit",
-    shell: process.platform === "win32",
-  },
+  // No shell: process.execPath is node itself. On Windows a shell joins the
+  // arguments into a cmd.exe line unescaped, so a URL with "&" would run commands.
+  { cwd: packageRoot, stdio: "inherit" },
 );
 
 child.on("exit", (code) => process.exit(code ?? 0));
