@@ -1,4 +1,5 @@
 import { spawn } from "node:child_process";
+import { pathToFileURL } from "node:url";
 import { parseCliArgs, resolveFetchEndpoint } from "./lib/cli-endpoints";
 import { fetchAndRenderCatalogPage } from "./lib/generic";
 import { parsePublicOrigin } from "./lib/origin";
@@ -54,7 +55,13 @@ export async function main(argv = process.argv.slice(2)): Promise<void> {
   }
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+// pathToFileURL, not `file://${path}`: the URL percent-encodes spaces and uses
+// forward slashes, so a plain string never matches on Windows or in a path with
+// a space, and the CLI would exit without doing anything.
+if (
+  process.argv[1] &&
+  import.meta.url === pathToFileURL(process.argv[1]).href
+) {
   main().catch((error) => {
     console.error(
       // A parse error can quote the upstream body.
