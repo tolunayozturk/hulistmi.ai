@@ -89,6 +89,18 @@ describe("POST /mcp with a JSON-RPC batch", () => {
   });
 });
 
+describe("GET /mcp", () => {
+  // Each request gets a new server, so nothing could ever write to a stream
+  // opened here. The MCP transport spec says to answer 405 instead.
+  it("answers 405 instead of opening an event stream", async () => {
+    const res = await request("/mcp", {
+      headers: { Accept: "text/event-stream" },
+    });
+    expect(res.status).toBe(405);
+    expect(res.headers.get("Allow")).toContain("POST");
+  });
+});
+
 describe("fetchHarmonyOSDocumentation", () => {
   // SKILL.md tells agents to name a page with the /consumer/{en|cn}/doc/ prefix; the
   // tool also takes the Huawei URL, and a bare <catalog>/<path> with `language`.

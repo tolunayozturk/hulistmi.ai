@@ -279,6 +279,20 @@ async function serveSkill(c: Context): Promise<Response> {
 app.get("/SKILL.md", serveSkill);
 app.get(`/.well-known/agent-skills/${SKILL_NAME}/SKILL.md`, serveSkill);
 
+// Each request gets a new server, so nothing could ever write to a stream opened
+// by GET. The transport spec says a server without one answers 405.
+app.get("/mcp", (c) =>
+  c.json(
+    {
+      jsonrpc: "2.0",
+      error: { code: -32000, message: "Method not allowed" },
+      id: null,
+    },
+    405,
+    { Allow: "POST, DELETE", "Cache-Control": "no-store" },
+  ),
+);
+
 app.all("/mcp", async (c) => {
   const tooLarge = await assertMcpBodyWithinLimit(c.req.raw);
   if (tooLarge) return tooLarge;
