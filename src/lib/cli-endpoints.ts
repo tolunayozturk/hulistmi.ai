@@ -9,8 +9,7 @@ export type CliCommand =
       language: Language;
       json: boolean;
     }
-  | { command: "search"; query: string; language: Language; json: boolean }
-  | { command: "serve"; port?: number };
+  | { command: "search"; query: string; language: Language; json: boolean };
 
 export interface ResolvedFetchEndpoint {
   path: string;
@@ -122,12 +121,7 @@ export function parseCliArgs(argv: string[]): CliCommand {
       throw new ValidationError("Usage: hulistmi search <query> [--json]");
     return { command, query, language: language ?? "en", json };
   }
-  if (command === "serve") {
-    const portFlag = remaining.indexOf("--port");
-    const port = portFlag >= 0 ? Number(remaining[portFlag + 1]) : undefined;
-    return { command, port };
-  }
   throw new ValidationError(
-    "Usage: hulistmi fetch <url-or-path> [--json] | hulistmi search <query> [--language en|cn] [--json] | hulistmi serve [--port 8787]",
+    "Usage: hulistmi fetch <url-or-path> [--json] | hulistmi search <query> [--language en|cn] [--json]",
   );
 }

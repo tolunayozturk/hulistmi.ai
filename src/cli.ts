@@ -1,4 +1,3 @@
-import { spawn } from "node:child_process";
 import { pathToFileURL } from "node:url";
 import { parseCliArgs, resolveFetchEndpoint } from "./lib/cli-endpoints";
 import { fetchAndRenderCatalogPage } from "./lib/generic";
@@ -35,37 +34,6 @@ export async function main(argv = process.argv.slice(2)): Promise<void> {
       ? terminalSafeJson({ url: sourceUrl, content })
       : terminalSafe(content);
     process.stdout.write(`${output}\n`);
-    return;
-  }
-  if (args.command === "serve") {
-    const child = spawn(
-      "npm",
-      [
-        "run",
-        "dev",
-        "--",
-        "--port",
-        String(args.port ?? 8787),
-        ...(origin ? ["--var", `PUBLIC_ORIGIN:${origin}`] : []),
-      ],
-      { stdio: "inherit" },
-    );
-    // Without this, a failed spawn (npm is npm.cmd on Windows, which spawn
-    // without a shell cannot run) is an unhandled 'error' event with a stack.
-    child.on("error", (error) => {
-      console.error(
-        `hulistmi: cannot start the dev server (${terminalSafe(error.message)}). Run \`npm run dev\` in a clone of the repository.`,
-      );
-      process.exit(1);
-    });
-    // Same as the launcher: pass on SIGTERM, and exit as the child did.
-    const forward = () => child.kill("SIGTERM");
-    process.on("SIGTERM", forward);
-    child.on("exit", (code, signal) => {
-      if (!signal) process.exit(code ?? 1);
-      process.off("SIGTERM", forward);
-      process.kill(process.pid, signal);
-    });
     return;
   }
 }
