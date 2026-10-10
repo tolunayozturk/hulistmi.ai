@@ -139,16 +139,18 @@ async function renderDocument(
   });
 }
 
-async function publicLimit(c: Context, next: () => Promise<void>) {
-  const blocked = await enforceRateLimit(c.req.raw, c.env);
-  if (blocked) return blocked;
-  await next();
+function publicLimit(route: string) {
+  return async (c: Context, next: () => Promise<void>) => {
+    const blocked = await enforceRateLimit(c.req.raw, c.env, route);
+    if (blocked) return blocked;
+    await next();
+  };
 }
 
-app.use("/search", publicLimit);
-app.use("/catalog", publicLimit);
-app.use("/mcp", publicLimit);
-app.use("/consumer/:lang/doc/*", publicLimit);
+app.use("/search", publicLimit("search"));
+app.use("/catalog", publicLimit("catalog"));
+app.use("/mcp", publicLimit("mcp"));
+app.use("/consumer/:lang/doc/*", publicLimit("consumer"));
 
 // Served through the Worker, not straight from the assets, so each deployment names
 // itself in them. The asset's ETag and length describe the unfilled file, so they are

@@ -6,14 +6,18 @@ export interface RateLimitEnv {
   RATE_LIMITER?: RateLimitBinding;
 }
 
+/**
+ * `route` names the bucket. It is fixed by the caller, not read from the request
+ * URL: the URL keeps the client's percent-encoding while the router decodes it, so
+ * /%73earch would reach /search under a fresh bucket.
+ */
 export async function enforceRateLimit(
   request: Request,
   env: RateLimitEnv,
+  route: string,
 ): Promise<Response | null> {
   if (!env.RATE_LIMITER) return null;
-  const url = new URL(request.url);
   const ip = request.headers.get("CF-Connecting-IP") ?? "anonymous";
-  const route = url.pathname.split("/")[1] || "root";
   const result = await env.RATE_LIMITER.limit({ key: `${ip}:${route}` });
   if (result.success) return null;
   return new Response(JSON.stringify({ error: "Rate limit exceeded" }), {

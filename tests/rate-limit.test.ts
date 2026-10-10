@@ -1,5 +1,5 @@
 import { SELF } from "cloudflare:test";
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import { enforceRateLimit } from "../src/lib/rate-limit";
 
 describe("public route rate limits", () => {
@@ -9,25 +9,17 @@ describe("public route rate limits", () => {
       {
         RATE_LIMITER: { limit: async () => ({ success: false }) },
       },
+      "search",
     );
     expect(blocked?.status).toBe(429);
 
     await expect(
-      enforceRateLimit(new Request("https://hulistmi.ai/catalog"), {
-        RATE_LIMITER: { limit: async () => ({ success: true }) },
-      }),
-    ).resolves.toBeNull();
-  });
-
-  it("rate-limits /consumer/cn/doc/... under the shared 'consumer' bucket", async () => {
-    const limiter = { limit: vi.fn(async () => ({ success: true })) };
-    await enforceRateLimit(
-      new Request(
-        "https://hulistmi.ai/consumer/cn/doc/harmonyos-guides/start-overview",
+      enforceRateLimit(
+        new Request("https://hulistmi.ai/catalog"),
+        { RATE_LIMITER: { limit: async () => ({ success: true }) } },
+        "catalog",
       ),
-      { RATE_LIMITER: limiter },
-    );
-    expect(limiter.limit).toHaveBeenCalledWith({ key: "anonymous:consumer" });
+    ).resolves.toBeNull();
   });
 });
 
@@ -53,5 +45,14 @@ describe("rate limiting through the full Hono app", () => {
 
     const bot = await SELF.fetch(new Request("https://hulistmi.ai/bot"));
     expect(bot.status).toBe(200);
+
+    // The router decodes the path but the request URL keeps the encoding, so a
+    // percent-encoded spelling of the route must not get a fresh bucket.
+    for (const spelling of ["/%73earch", "/s%65arch", "/%73%65%61%72%63%68"]) {
+      const encoded = await SELF.fetch(
+        new Request(`https://hulistmi.ai${spelling}?q=`),
+      );
+      expect(encoded.status, spelling).toBe(429);
+    }
   });
 });
