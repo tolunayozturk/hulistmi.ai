@@ -282,6 +282,26 @@ app.get(`/.well-known/agent-skills/${SKILL_NAME}/SKILL.md`, serveSkill);
 app.all("/mcp", async (c) => {
   const tooLarge = await assertMcpBodyWithinLimit(c.req.raw);
   if (tooLarge) return tooLarge;
+  // The rate limit counts requests, so a request carries one message: the
+  // transport would run every call in a JSON-RPC batch. MCP 2025-06-18 removed
+  // batching. The body is cached, so the transport reads it again; a body that is
+  // not JSON is left for the transport to reject.
+  if (c.req.method === "POST") {
+    const body = await c.req.json().catch(() => undefined);
+    if (Array.isArray(body))
+      return c.json(
+        {
+          jsonrpc: "2.0",
+          error: {
+            code: -32600,
+            message: "JSON-RPC batches are not supported",
+          },
+          id: null,
+        },
+        400,
+        { "Cache-Control": "no-store" },
+      );
+  }
   const mcpServer = createMcpServer(origin(c));
   const transport = new StreamableHTTPTransport();
   await mcpServer.connect(transport);

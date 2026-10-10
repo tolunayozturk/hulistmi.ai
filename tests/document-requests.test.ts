@@ -57,6 +57,38 @@ async function fetchTool(args: { path: string; language?: string }) {
   return { isError: result?.isError, text: result?.content?.[0]?.text ?? "" };
 }
 
+describe("POST /mcp with a JSON-RPC batch", () => {
+  // The rate limit counts one request, so one request must not carry many tool
+  // calls. MCP 2025-06-18 removed batching.
+  it("is refused before any tool reaches the upstream", async () => {
+    const call = (id: number) => ({
+      jsonrpc: "2.0",
+      id,
+      method: "tools/call",
+      params: {
+        name: "fetchHarmonyOSDocumentation",
+        arguments: { path: `harmonyos-guides/page-${id}` },
+      },
+    });
+    const body = JSON.stringify([call(1), call(2)]);
+    const res = await request("/mcp", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json, text/event-stream",
+        "Content-Length": String(new TextEncoder().encode(body).length),
+      },
+      body,
+    });
+    expect(res.status).toBe(400);
+    expect(await res.json()).toMatchObject({
+      jsonrpc: "2.0",
+      error: { code: -32600 },
+      id: null,
+    });
+  });
+});
+
 describe("fetchHarmonyOSDocumentation", () => {
   // SKILL.md tells agents to name a page with the /consumer/{en|cn}/doc/ prefix; the
   // tool also takes the Huawei URL, and a bare <catalog>/<path> with `language`.
