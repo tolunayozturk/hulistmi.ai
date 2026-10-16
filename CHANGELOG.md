@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.4.1
+
+### Patch Changes
+
+- Exit quietly when a reader such as `head` closes the CLI output early.
+
+- Fetch Chinese reference pages. Before, each `cn` page in `harmonyos-references` failed with "Upstream content is too large".
+
+- Search the Chinese documentation for `language=cn`. Before, a Chinese query returned no results, and results linked to English pages.
+
+- Use about half the CPU per request: parse pages with htmlparser2 instead of cheerio, and skip route compilation on the first request. More pages render within the free plan's CPU limit.
+
+- Log unexpected errors before the generic 502 answer.
+
+- Describe every page form that `fetchHarmonyOSDocumentation` accepts in SKILL.md.
+
 ## 1.4.0
 
 ### Minor Changes
