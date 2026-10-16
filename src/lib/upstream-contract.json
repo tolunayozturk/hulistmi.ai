@@ -5,7 +5,6 @@
     "/community/servlet/consumer/cn/documentPortal/getDocumentById",
     "/community/servlet/consumer/cn/documentPortal/getNavigationAddress",
     "/community/servlet/consumer/cn/documentPortal/checkCenterGrayUser",
-    "/community/servlet/consumer/cn/documentPortal/getCenterRootNodeTree",
     "/community/servlet/consumer/cn/documentPortal/getCenterDocument",
     "/community/servlet/consumer/partnerCommunityService/developer/search"
   ],

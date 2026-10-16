@@ -59,7 +59,7 @@ describe("HarmonyOS search", () => {
     });
   });
 
-  it("threads language=cn into the upstream body (top-level only; developerVertical.language stays 'en' as the populated vertical)", async () => {
+  it("threads language=cn into the upstream body and selects the zh docs vertical", async () => {
     const result = await searchHarmonyOSDocs(
       "UIAbility",
       "cn",
@@ -69,7 +69,7 @@ describe("HarmonyOS search", () => {
     expect(searchMock.mock.calls[0][0].body).toMatchObject({
       language: "cn",
       keyWord: "UIAbility",
-      developerVertical: { language: "en" },
+      developerVertical: { language: "zh" },
     });
     expect(renderSearchMarkdown(result)).toContain("HarmonyOS 搜索：UIAbility");
   });

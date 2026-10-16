@@ -32,10 +32,8 @@ interface HuaweiDeveloperInfo {
 }
 
 function buildSearchBody(query: string, language: Language): unknown {
-  // `developerVertical.language` is the docs-vertical selector; only the "en"
-  // vertical is populated on the upstream, so it stays fixed at "en" regardless
-  // of the requested result language. The top-level `language` field controls
-  // the content language of returned results.
+  // `developerVertical.language` selects the docs index: "en" holds the English
+  // pages and "zh" the Chinese ones. A "cn" vertical returns no results.
   const template = UPSTREAM_CONTRACT.search.searchBodyTemplate;
   return {
     ...template,
@@ -43,7 +41,7 @@ function buildSearchBody(query: string, language: Language): unknown {
     keyWord: query,
     developerVertical: {
       ...template.developerVertical,
-      language: "en",
+      language: language === "cn" ? "zh" : "en",
     },
   };
 }

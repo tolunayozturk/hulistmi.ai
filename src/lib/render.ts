@@ -1,5 +1,6 @@
-import * as cheerio from "cheerio";
 import type { AnyNode } from "domhandler";
+import { findAll, findOne, removeElement, textContent } from "domutils";
+import { parseDocument } from "htmlparser2";
 import { LABELS } from "./labels";
 import type { Language } from "./language";
 import { HOSTED_ORIGIN, selfHostedNote } from "./origin";
@@ -11,44 +12,49 @@ interface NodeLike {
   tagName?: string;
   name?: string;
   data?: string;
+  attribs?: Record<string, string>;
   children?: NodeLike[];
 }
 
-// NodeLike is a structural subset of cheerio's AnyNode union, kept so the walk
+// NodeLike is a structural subset of domhandler's AnyNode union, kept so the walk
 // below can read tagName/data/children without narrowing at every access.
-// cheerio's own selectors need the real union, so convert at that boundary.
+// domutils needs the real union, so convert at that boundary.
 const el = (node: NodeLike): AnyNode => node as unknown as AnyNode;
 
-export function htmlToMarkdown(html: string): string {
-  const $ = cheerio.load(html);
-  $("script,style,noscript").remove();
-  // Strip anchor name elements (Huawei doc ID anchors)
-  $("a[name]").remove();
+const REMOVED_TAGS = new Set(["script", "style", "noscript"]);
 
-  // Remove h1 — it's already rendered as the document title by renderDocumentMarkdown
-  $("h1").remove();
-  const body = $("body");
-  const root: cheerio.Cheerio<AnyNode> = body.length ? body : $.root();
-  const first = root.get(0);
-  if (!first) return "";
-  return renderChildren(first as unknown as NodeLike, $)
+export function htmlToMarkdown(html: string): string {
+  const document = parseDocument(html);
+  for (const node of findAll(
+    (element) =>
+      REMOVED_TAGS.has(element.name) ||
+      // Huawei doc ID anchors
+      (element.name === "a" && element.attribs.name !== undefined) ||
+      // Already rendered as the document title by renderDocumentMarkdown
+      element.name === "h1",
+    document.children,
+  ))
+    removeElement(node);
+  const root =
+    findOne((element) => element.name === "body", document.children) ??
+    document;
+  return renderChildren(root as unknown as NodeLike)
     .replace(/\n{3,}/g, "\n\n")
     .trim();
 }
 
-function renderChildren(node: NodeLike, $: cheerio.CheerioAPI): string {
+function renderChildren(node: NodeLike): string {
   return (node.children ?? [])
-    .map((child) => renderBlock(child, $))
+    .map((child) => renderBlock(child))
     .filter(Boolean)
     .join("\n\n");
 }
 
-function renderBlock(node: NodeLike, $: cheerio.CheerioAPI): string {
+function renderBlock(node: NodeLike): string {
   if (node.type === "text") return normalizeText(node.data ?? "");
   if (node.type !== "tag") return "";
 
   const tag = (node.tagName ?? node.name ?? "").toLowerCase();
-  const element = $(el(node));
   switch (tag) {
     case "h1":
     case "h2":
@@ -57,16 +63,16 @@ function renderBlock(node: NodeLike, $: cheerio.CheerioAPI): string {
     case "h5":
     case "h6": {
       const depth = Number(tag.slice(1));
-      let text = inlineText(node, $);
+      let text = inlineText(node);
       // Strip [hX] artifacts from headings
       text = text.replace(/\[h[1-6]\]/gi, "");
       return `${"#".repeat(depth)} ${text}`;
     }
     case "p":
-      return inlineText(node, $);
+      return inlineText(node);
     case "pre": {
-      const cls = $(el(node)).attr("class");
-      const text = element.text();
+      const cls = node.attribs?.class;
+      const text = textContent(el(node));
       const langMatch = cls
         ? cls.match(
             /\b(ts|json|html|xml|bash|sh|css|js|java|python|cpp|kotlin|swift|go|rust|ruby)\b/,
@@ -77,21 +83,21 @@ function renderBlock(node: NodeLike, $: cheerio.CheerioAPI): string {
       return `${fence}${text.trim()}\n\`\`\``;
     }
     case "code":
-      return `\`${normalizeText(element.text())}\``;
+      return `\`${normalizeText(textContent(el(node)))}\``;
     case "dl":
-      return renderDefinitionList(node, $);
+      return renderDefinitionList(node);
     case "ul":
-      return renderList(node, $, false);
+      return renderList(node, false);
     case "ol":
-      return renderList(node, $, true);
+      return renderList(node, true);
     case "table":
-      return renderTable(node, $);
+      return renderTable(node);
     case "br":
       return "\n";
     case "hr":
       return "---";
     case "blockquote":
-      return renderChildren(node, $)
+      return renderChildren(node)
         .split("\n")
         .map((line) => (line ? `> ${line}` : ">"))
         .join("\n");
@@ -103,31 +109,25 @@ function renderBlock(node: NodeLike, $: cheerio.CheerioAPI): string {
     case "thead":
     case "tbody":
     case "tfoot":
-      return renderChildren(node, $);
+      return renderChildren(node);
     case "strong":
-      return `**${inlineText(node, $)}**`;
+      return `**${inlineText(node)}**`;
     case "em":
     case "i":
-      return `*${inlineText(node, $)}*`;
+      return `*${inlineText(node)}*`;
     case "sup":
-      return `^{${inlineText(node, $)}}`;
+      return `^{${inlineText(node)}}`;
     case "sub":
-      return `_{${inlineText(node, $)}}`;
+      return `_{${inlineText(node)}}`;
     case "span":
       // span is often used for image wrappers or styling — recurse
-      return renderChildren(node, $);
+      return renderChildren(node);
     default:
-      return hasBlockChildren(node)
-        ? renderChildren(node, $)
-        : inlineText(node, $);
+      return hasBlockChildren(node) ? renderChildren(node) : inlineText(node);
   }
 }
 
-function renderList(
-  node: NodeLike,
-  $: cheerio.CheerioAPI,
-  ordered: boolean,
-): string {
+function renderList(node: NodeLike, ordered: boolean): string {
   return (node.children ?? [])
     .filter((child) => child.type === "tag" && tagName(child) === "li")
     .map((item, index) => {
@@ -144,14 +144,14 @@ function renderList(
       const nonNested = allChildren.filter(
         (c) => !["ul", "ol"].includes(tagName(c)),
       );
-      const blocks = renderItemBlocks(nonNested, $);
+      const blocks = renderItemBlocks(nonNested);
       const [first = "", ...rest] = blocks;
       const text = rest.length
         ? `${first}\n\n${rest.map((block) => indent(block)).join("\n\n")}`
         : first;
       const nested = nestedChildren
         .map((child) =>
-          renderList(child, $, tagName(child) === "ol")
+          renderList(child, tagName(child) === "ol")
             .split("\n")
             .map((line) => `  ${line}`)
             .join("\n"),
@@ -192,15 +192,12 @@ function isInlineNode(node: NodeLike): boolean {
 
 // Group an <li>'s children into rendered blocks, keeping runs of inline nodes
 // together so a sentence stays a sentence.
-function renderItemBlocks(
-  children: NodeLike[],
-  $: cheerio.CheerioAPI,
-): string[] {
+function renderItemBlocks(children: NodeLike[]): string[] {
   const blocks: string[] = [];
   let run: NodeLike[] = [];
   const flush = () => {
     if (run.length === 0) return;
-    const text = inlineText({ type: "tag", children: run } as NodeLike, $);
+    const text = inlineText({ type: "tag", children: run } as NodeLike);
     if (text) blocks.push(text);
     run = [];
   };
@@ -210,7 +207,7 @@ function renderItemBlocks(
       continue;
     }
     flush();
-    const block = renderBlock(child, $).trim();
+    const block = renderBlock(child).trim();
     if (block) blocks.push(block);
   }
   flush();
@@ -227,11 +224,11 @@ function indent(block: string): string {
 // Markdown has no definition list, so a term and its definition are rendered as a
 // bold line and a paragraph. Rendering the <dl>'s children as one run concatenated
 // them into "TermDefinition text".
-function renderDefinitionList(node: NodeLike, $: cheerio.CheerioAPI): string {
+function renderDefinitionList(node: NodeLike): string {
   return (node.children ?? [])
     .filter((child) => ["dt", "dd"].includes(tagName(child)))
     .map((child) => {
-      const text = renderItemBlocks(child.children ?? [], $)
+      const text = renderItemBlocks(child.children ?? [])
         .filter(Boolean)
         .join("\n\n")
         .trim();
@@ -242,15 +239,17 @@ function renderDefinitionList(node: NodeLike, $: cheerio.CheerioAPI): string {
     .join("\n\n");
 }
 
-function renderTable(node: NodeLike, $: cheerio.CheerioAPI): string {
-  const rows = $(el(node))
-    .find("tr")
-    .toArray()
+function renderTable(node: NodeLike): string {
+  const rows = findAll(
+    (element) => element.name === "tr",
+    (node.children ?? []).map(el),
+  )
     .map((row) =>
-      $(row)
-        .children("th,td")
-        .toArray()
-        .map((cell) => escapeTableCell(inlineText(cell as NodeLike, $))),
+      (row.children as NodeLike[])
+        .filter(
+          (cell) => cell.type === "tag" && ["th", "td"].includes(tagName(cell)),
+        )
+        .map((cell) => escapeTableCell(inlineText(cell))),
     )
     .filter((cells) => cells.length > 0);
   if (rows.length === 0) return "";
@@ -275,39 +274,39 @@ function escapeTableCell(text: string): string {
   return text.replace(/\|/g, "\\|").replace(/\n+/g, "<br>");
 }
 
-function inlineText(node: NodeLike, $: cheerio.CheerioAPI): string {
+function inlineText(node: NodeLike): string {
   return (node.children ?? [])
-    .map((child) => inlineNode(child, $))
+    .map((child) => inlineNode(child))
     .join("")
     .replace(/\s+/g, " ")
     .trim();
 }
 
-function inlineNode(node: NodeLike, $: cheerio.CheerioAPI): string {
+function inlineNode(node: NodeLike): string {
   if (node.type === "text") return node.data ?? "";
   if (node.type !== "tag") return "";
 
   const tag = tagName(node);
   if (tag === "br") return "\n";
-  if (tag === "code") return `\`${normalizeText($(el(node)).text())}\``;
+  if (tag === "code") return `\`${normalizeText(textContent(el(node)))}\``;
   if (tag === "a") {
-    const text = inlineText(node, $);
-    const href = $(el(node)).attr("href");
+    const text = inlineText(node);
+    const href = node.attribs?.href;
     return href && text ? `[${text}](${href})` : text;
   }
   if (tag === "img") {
-    const src = $(el(node)).attr("src") ?? "";
-    const alt = $(el(node)).attr("alt") ?? $(el(node)).attr("title") ?? "";
+    const src = node.attribs?.src ?? "";
+    const alt = node.attribs?.alt ?? node.attribs?.title ?? "";
     // Use a short filename from the URL as alt when none is provided
     const fallbackAlt =
       alt || (src ? (src.split("/").pop()?.split("?")[0] ?? "") : "");
     return `![${fallbackAlt}](${src})`;
   }
-  if (tag === "strong") return `**${inlineText(node, $)}**`;
-  if (tag === "em" || tag === "i") return `*${inlineText(node, $)}*`;
-  if (tag === "sup") return `^{${inlineText(node, $)}}`;
-  if (tag === "sub") return `_{${inlineText(node, $)}}`;
-  return inlineText(node, $);
+  if (tag === "strong") return `**${inlineText(node)}**`;
+  if (tag === "em" || tag === "i") return `*${inlineText(node)}*`;
+  if (tag === "sup") return `^{${inlineText(node)}}`;
+  if (tag === "sub") return `_{${inlineText(node)}}`;
+  return inlineText(node);
 }
 
 function hasBlockChildren(node: NodeLike): boolean {
