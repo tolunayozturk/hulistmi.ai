@@ -45,6 +45,12 @@ if (
   process.argv[1] &&
   import.meta.url === pathToFileURL(process.argv[1]).href
 ) {
+  // A reader that stops early, as `| head` does, closes the pipe. That ends the
+  // output, not the run with an error.
+  process.stdout.on("error", (error: NodeJS.ErrnoException) => {
+    if (error.code === "EPIPE") process.exit(0);
+    throw error;
+  });
   main().catch((error) => {
     console.error(
       // A parse error can quote the upstream body.
