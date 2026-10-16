@@ -39,7 +39,6 @@ function collectVerifiedRequests(): VerifiedHuaweiRequest[] {
       [
         doc.checkCenterGrayUser,
         doc.getDocumentById,
-        "getCenterRootNodeTree" in doc ? doc.getCenterRootNodeTree : undefined,
         "getCenterDocument" in doc ? doc.getCenterDocument : undefined,
       ].filter((request): request is VerifiedHuaweiRequest => Boolean(request)),
     ),

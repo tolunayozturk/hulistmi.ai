@@ -142,11 +142,6 @@ describe("HarmonyOS document fetch", () => {
       .mockResolvedValueOnce({
         code: 0,
         message: "success",
-        value: { catalogTreeList: [] },
-      })
-      .mockResolvedValueOnce({
-        code: 0,
-        message: "success",
         value: {
           status: "4",
           title: "Window Rotation",
@@ -162,7 +157,7 @@ describe("HarmonyOS document fetch", () => {
     );
 
     expect(page.title).toBe("Window Rotation");
-    expect(mockedFetchHuaweiJson).toHaveBeenCalledTimes(3);
+    expect(mockedFetchHuaweiJson).toHaveBeenCalledTimes(2);
     expect(mockedFetchHuaweiJson.mock.calls[1][0].body).toMatchObject({
       centerPrefix: "hmos",
       level2NodeAlias: "hmos-ui",
@@ -259,11 +254,6 @@ describe("HarmonyOS document fetch", () => {
       .mockResolvedValueOnce({
         code: 0,
         message: "success",
-        value: { catalogTreeList: [] },
-      })
-      .mockResolvedValueOnce({
-        code: 0,
-        message: "success",
         value: {
           status: "4",
           title: "Window Rotation",
@@ -279,12 +269,6 @@ describe("HarmonyOS document fetch", () => {
     );
 
     expect(mockedFetchHuaweiJson.mock.calls[1][0].body).toMatchObject({
-      centerPrefix: "hmos",
-      level2NodeAlias: "hmos-ui",
-      language: "cn",
-      fileName: "window-rotation",
-    });
-    expect(mockedFetchHuaweiJson.mock.calls[2][0].body).toMatchObject({
       centerPrefix: "hmos",
       level2NodeAlias: "hmos-ui",
       language: "cn",

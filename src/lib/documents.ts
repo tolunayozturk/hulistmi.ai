@@ -12,7 +12,6 @@ import { trimSlashes } from "./url";
 interface DocumentContractEntry {
   checkCenterGrayUser: VerifiedHuaweiRequest;
   getDocumentById: VerifiedHuaweiRequest;
-  getCenterRootNodeTree?: VerifiedHuaweiRequest;
   getCenterDocument?: VerifiedHuaweiRequest;
 }
 
@@ -41,8 +40,6 @@ const CHECK_CENTER_GRAY_USER_URL =
   "https://svc-drcn.developer.huawei.com/community/servlet/consumer/cn/documentPortal/checkCenterGrayUser";
 const GET_DOCUMENT_BY_ID_URL =
   "https://svc-drcn.developer.huawei.com/community/servlet/consumer/cn/documentPortal/getDocumentById";
-const GET_CENTER_ROOT_NODE_TREE_URL =
-  "https://svc-drcn.developer.huawei.com/community/servlet/consumer/cn/documentPortal/getCenterRootNodeTree";
 const GET_CENTER_DOCUMENT_URL =
   "https://svc-drcn.developer.huawei.com/community/servlet/consumer/cn/documentPortal/getCenterDocument";
 
@@ -63,15 +60,11 @@ export async function fetchHarmonyDocumentPageData(
     origin,
   );
   if (isCenterDocument(grayResponse)) {
-    const centerRequests =
-      entry.getCenterRootNodeTree && entry.getCenterDocument
-        ? {
-            getCenterRootNodeTree: entry.getCenterRootNodeTree,
-            getCenterDocument: entry.getCenterDocument,
-          }
-        : buildCenterRequests(grayResponse, path, language);
-    await fetchHuaweiJson(centerRequests.getCenterRootNodeTree, origin);
-    return fetchAndValidateDocument(centerRequests.getCenterDocument, origin);
+    return fetchAndValidateDocument(
+      entry.getCenterDocument ??
+        buildCenterDocumentRequest(grayResponse, path, language),
+      origin,
+    );
   }
 
   return fetchAndValidateDocument(entry.getDocumentById, origin);
@@ -95,7 +88,6 @@ function withLanguage(
   return {
     checkCenterGrayUser: stamp(entry.checkCenterGrayUser),
     getDocumentById: stamp(entry.getDocumentById),
-    getCenterRootNodeTree: stampOptional(entry.getCenterRootNodeTree),
     getCenterDocument: stampOptional(entry.getCenterDocument),
   };
 }
@@ -148,13 +140,11 @@ function isCenterDocument(response: GrayUserResponse): boolean {
   );
 }
 
-function buildCenterRequests(
+function buildCenterDocumentRequest(
   response: GrayUserResponse,
   path: string,
   language: Language,
-): Required<
-  Pick<DocumentContractEntry, "getCenterRootNodeTree" | "getCenterDocument">
-> {
+): VerifiedHuaweiRequest {
   const value = response.value;
   const fileName = value?.filename ?? normalizeDocumentSlug(path);
   if (
@@ -164,23 +154,15 @@ function buildCenterRequests(
   )
     throw new Error("HarmonyOS center document response changed shape");
 
-  const body = {
-    centerPrefix: value.centerPrefix,
-    language,
-    level2NodeAlias: value.level2NodeAlias,
-    isApi: value.isApi ? 1 : 0,
-    fileName,
-  };
   return {
-    getCenterRootNodeTree: {
-      url: GET_CENTER_ROOT_NODE_TREE_URL,
-      headers: {},
-      body,
-    },
-    getCenterDocument: {
-      url: GET_CENTER_DOCUMENT_URL,
-      headers: {},
-      body,
+    url: GET_CENTER_DOCUMENT_URL,
+    headers: {},
+    body: {
+      centerPrefix: value.centerPrefix,
+      language,
+      level2NodeAlias: value.level2NodeAlias,
+      isApi: value.isApi ? 1 : 0,
+      fileName,
     },
   };
 }
