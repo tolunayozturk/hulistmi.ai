@@ -34,7 +34,7 @@ Both English (`en`, default) and Chinese (`cn`) documentation are supported. For
 ## MCP Tools
 
 - `searchHarmonyOSDocumentation` — accepts optional `language: "en" | "cn"` (default `"en"`)
-- `fetchHarmonyOSDocumentation` — accepts optional `language: "en" | "cn"` (default `"en"`); the `path` must start with one of the supported catalog names (e.g. `harmonyos-guides/<slug>`, `harmonyos-releases/<slug>`, …)
+- `fetchHarmonyOSDocumentation` — `path` is a Huawei documentation URL, a `/consumer/{en|cn}/doc/<catalog>/<path>` path, or `<catalog>/<path>` with one of the supported catalog names (e.g. `harmonyos-guides/<slug>`). A URL or `/consumer` path sets the language; with `<catalog>/<path>`, pass optional `language: "en" | "cn"` (default `"en"`)
 - `fetchHarmonyOSCatalog` — accepts optional `language: "en" | "cn"` (default `"en"`) and `catalogName` (one of the 6 supported catalogs; default `harmonyos-guides`)
 
 ## CLI
