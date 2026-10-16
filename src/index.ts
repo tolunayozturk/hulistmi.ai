@@ -1,6 +1,7 @@
 import { StreamableHTTPTransport } from "@hono/mcp";
 import type { Context } from "hono";
 import { Hono } from "hono";
+import { PatternRouter } from "hono/router/pattern-router";
 import { fetchHarmonyOSCatalog, renderCatalogMarkdown } from "./lib/catalog";
 import { type CatalogName, isCatalogName } from "./lib/catalog-name";
 import {
@@ -41,7 +42,9 @@ export interface Env {
   };
 }
 
-const app = new Hono<{ Bindings: Env }>();
+// PatternRouter does no up-front route compilation, which the default router does
+// on the first request of each isolate. With few routes, matching costs the same.
+const app = new Hono<{ Bindings: Env }>({ router: new PatternRouter() });
 const ROBOTS_HEADER = "noindex, nofollow, noarchive";
 const DOC_CACHE = "public, max-age=3600, s-maxage=86400";
 const SHORT_CACHE = "public, max-age=300, s-maxage=600";
